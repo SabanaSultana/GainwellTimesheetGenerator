@@ -10,9 +10,11 @@ const {
 } = require('../../controllers/user/getUser')
 const userSignUp = require('../../controllers/user/userSignUp')
 const userLogin = require('../../controllers/user/userLogin')
+const userLogout = require('../../controllers/user/userLogout')
 
 router.post('/signup', userSignUp)
 router.post('/login', userLogin)
+router.post('/logout', userLogout)
 
 router.get('/', getAllUsers)
 router.get('/id/:id', getUserById)
