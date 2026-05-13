@@ -1,17 +1,20 @@
-import React from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import Navbar from './components/Navbar.jsx';
 
-
-
-function App() {
-  const location = useLocation()
-  // const hideHeader = location.pathname === '/signup' || location.pathname === '/login'
-
+/**
+ * Root layout for all authenticated pages.
+ * Renders the sticky Navbar at the top and the active route below via <Outlet />.
+ */
+const App = () => {
   return (
-    <>
-    <h1 class='bg-amber-400'>Hellow World </h1>
-    </>
-  )
-}
+    <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
+      <Navbar />
+      <main style={{ minHeight: '93vh' }}>
+        <Outlet />
+      </main>
+    </div>
+  );
+};
 
-export default App
+export default App;

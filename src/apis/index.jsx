@@ -1,14 +1,42 @@
-
-
-// const backendDomin = process.env.REACT_APP_BACKEND_URL;
-const backendDomain= "http://localhost:3000"; 
-console.log("backendDomin", backendDomain);
+const backendDomain = "http://localhost:3000";
 
 const SummaryApi = {
-  // signUp: {
-  //   url: `${backendDomain}/api/signup`,
-  //   method: "post",
-  // }  
+  signUp: {
+    url: `${backendDomain}/api/users/signup`,
+    method: "post",
+  },
+  signIn: {
+    url: `${backendDomain}/api/users/login`,
+    method: "post",
+  },
+  logout: {
+    url: `${backendDomain}/api/users/logout`,
+    method: "post",
+  },
+  getAllUsers: {
+    url: `${backendDomain}/api/users`,
+    method: "get",
+  },
+  getUserById: {
+    url: `${backendDomain}/api/users/id`,
+    method: "get",
+  },
+  getUserByEmployeeId: {
+    url: `${backendDomain}/api/users/employee`,
+    method: "get",
+  },
+  getUsersByDepartment: {
+    url: `${backendDomain}/api/users/department`,
+    method: "get",
+  },
+  getUsersByRole: {
+    url: `${backendDomain}/api/users/role`,
+    method: "get",
+  },
+  getUsersByManager: {
+    url: `${backendDomain}/api/users/manager`,
+    method: "get",
+  },
 };
 
 export default SummaryApi;
