@@ -4,6 +4,7 @@ const cors=require('cors')
 const cookieParser=require('cookie-parser')
 const connectDB = require('./config/db')
 const userRoutes = require('./routes/user')
+const projectRoutes = require('./routes/project')
 
 const app=express()
 
@@ -20,6 +21,7 @@ app.use(express.json({ limit: '10mb' }))
 app.use(cookieParser())
 
 app.use('/api/users', userRoutes)
+app.use('/api/projects', projectRoutes)
 
 PORT=process.env.PORT || 3000
 
