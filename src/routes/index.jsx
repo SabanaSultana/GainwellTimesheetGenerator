@@ -7,6 +7,7 @@ import ProtectedRoute from '../components/ProtectedRoute.jsx';
 import RoleProtectedRoute from '../components/RoleProtectedRoute.jsx';
 import ManagerDashboard from '../pages/ManagerDashboard.jsx';
 import EmployeeDashboard from '../pages/EmployeeDashboard.jsx';
+import CreateProject from '../components/CreateProject.jsx';
 
 /**
  * Route hierarchy:
@@ -45,6 +46,11 @@ const router = createBrowserRouter([
       {
         element: <App />,
         children: [
+          // Any authenticated user
+          {
+            path: '/create-project',
+            element: <CreateProject />,
+          },
           // Manager-only section
           {
             element: <RoleProtectedRoute allowedType="manager" />,

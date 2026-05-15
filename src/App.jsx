@@ -1,18 +1,16 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
 
-/**
- * Root layout for all authenticated pages.
- * Renders the sticky Navbar at the top and the active route below via <Outlet />.
- */
 const App = () => {
   return (
-    <div style={{ minHeight: '100vh', background: '#f0f4f8' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f4f8', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <main style={{ minHeight: '93vh' }}>
+      <main style={{ flex: 1 }}>
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 };

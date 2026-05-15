@@ -11,6 +11,8 @@ const Signup = () => {
     name: '', email: '', employeeId: '', password: '',
     confirmPassword: '', managerEmpId: '', role: '', department: '',
   });
+
+  
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [managers, setManagers] = useState([]);

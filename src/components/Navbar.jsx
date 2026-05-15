@@ -1,101 +1,86 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SummaryApi from '../apis/index.jsx';
 import { getAuthUser, removeAuthUser } from '../utils/auth';
 import { project_name } from '../config/project';
 import logo from '../assets/logo_gainwell_r.png';
+import { BiLogOut } from 'react-icons/bi';
 
-/**
- * Global top navigation bar shown on all protected/dashboard pages.
- * Displays the project brand, logged-in user info, and a logout button.
- *
- * Logout flow:
- *  1. Calls backend POST /api/users/logout to clear the HttpOnly cookie.
- *  2. Calls removeAuthUser() to clear localStorage — this dispatches a native
- *     `storage` event that triggers cross-tab logout in all other open tabs.
- *  3. Redirects the current tab to /login.
- */
 const Navbar = () => {
-  const navigate = useNavigate();
-  const session = getAuthUser();
-  const user = session?.user;
+  const navigate      = useNavigate();
+  const session       = getAuthUser();
+  const user          = session?.user;
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    setLoggingOut(true);
     try {
-      await fetch(SummaryApi.logout.url, {
-        method: SummaryApi.logout.method,
-        credentials: 'include',
-      });
-    } catch {
-      // Backend unreachable — proceed with local logout regardless so the
-      // user is never stuck on a page they can't leave.
-    } finally {
-      removeAuthUser(); // Triggers storage event → cross-tab logout
-      navigate('/login', { replace: true });
-    }
+      await fetch(SummaryApi.logout.url, { method: SummaryApi.logout.method, credentials: 'include' });
+    } catch { /* clear session regardless */ }
+    await new Promise((res) => setTimeout(res, 3200));
+    removeAuthUser();
+    navigate('/login', { replace: true });
   };
 
   return (
+    <>
+    {loggingOut && (
+      <div
+        style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(14,30,61,0.55)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: '20px',
+        }}
+      >
+        <div
+          style={{
+            width: '56px', height: '56px', borderRadius: '50%',
+            border: '5px solid rgba(255,255,255,0.2)',
+            borderTopColor: '#ffffff',
+            animation: 'spin 0.85s linear infinite',
+          }}
+        />
+        <p style={{ color: '#ffffff', fontSize: '15px', fontWeight: 600, margin: 0, fontFamily: 'Arial, sans-serif', letterSpacing: '0.3px' }}>
+          Logging out…
+        </p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    )}
     <nav
       style={{
-        width: '100vw',
-        height: '7vh',
-        minHeight: '52px',
+        width: '100%',
+        height: '68px',
         background: '#0e1e3d',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 3vw',
+        padding: '0 48px',
         boxSizing: 'border-box',
         boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
+        fontFamily: 'Arial, sans-serif',
       }}
     >
-      {/* ── Left: Logo + brand name ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.2vw' }}>
-        <img
-          src={logo}
-          alt={project_name}
-          style={{ height: '4.5vh', minHeight: '32px', width: 'auto' }}
-        />
-        <span
-          style={{
-            color: '#ffffff',
-            fontWeight: 700,
-            fontSize: 'clamp(12px, 1.8vh, 18px)',
-            letterSpacing: '1px',
-            whiteSpace: 'nowrap',
-          }}
-        >
+      {/* Left: Logo + brand */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <img src={logo} alt={project_name} style={{ height: '44px', width: 'auto' }} />
+        <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '21px', letterSpacing: '0.3px' }}>
           {project_name}
         </span>
       </div>
 
-      {/* ── Right: User info + Logout button ── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '2vw' }}>
+      {/* Right: User info + Logout */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
         {user && (
           <div style={{ textAlign: 'right' }}>
-            <p
-              style={{
-                color: '#ffffff',
-                fontSize: 'clamp(11px, 1.6vh, 16px)',
-                fontWeight: 600,
-                margin: 0,
-                lineHeight: 1.3,
-              }}
-            >
+            <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
               {user.name}
             </p>
-            <p
-              style={{
-                color: 'rgba(193,221,255,0.7)',
-                fontSize: 'clamp(10px, 1.3vh, 13px)',
-                margin: 0,
-                lineHeight: 1.3,
-              }}
-            >
+            <p style={{ color: 'rgba(193,221,255,0.8)', fontSize: '13px', margin: 0, lineHeight: 1.3 }}>
               {user.role}
             </p>
           </div>
@@ -103,32 +88,30 @@ const Navbar = () => {
 
         <button
           onClick={handleLogout}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.7)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)'; }}
           style={{
             background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.35)',
+            border: '1.5px solid rgba(255,255,255,0.35)',
             color: '#ffffff',
-            padding: '1vh 1.5vw',
-            minWidth: '80px',
-            borderRadius: '7px',
+            padding: '8px 20px',
+            borderRadius: '8px',
             cursor: 'pointer',
-            fontSize: 'clamp(11px, 1.5vh, 15px)',
+            fontSize: '14px',
             fontWeight: 600,
-            transition: 'background 0.2s ease, border-color 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'background 0.2s, border-color 0.2s',
             whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.7)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)';
+            fontFamily: 'Arial, sans-serif',
           }}
         >
-          Logout
+          Logout <BiLogOut size={16} />
         </button>
       </div>
     </nav>
+    </>
   );
 };
 

@@ -37,6 +37,14 @@ const SummaryApi = {
     url: `${backendDomain}/api/users/manager`,
     method: "get",
   },
+  getProjects: {
+    url: `${backendDomain}/api/projects`,
+    method: "get",
+  },
+  createProject: {
+    url: `${backendDomain}/api/projects`,
+    method: "post",
+  },
 };
 
 export default SummaryApi;
