@@ -17,11 +17,11 @@ const userLogin=async(req,res)=>{
                     success:false,
                     message:"All fields are required"
                 }
-                
+
             )
         }
 
-        // check if user existsc:\Users\ME3\Downloads\2026\TimeSheet_Generator\Web_App\backend\controllers\user\userSignUp.js
+        
 
         const user=await User.findOne({employeeId:employeeId})
 

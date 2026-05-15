@@ -15,6 +15,8 @@ const userSignUp=async(req,res)=>{
             )
         }
 
+        const showPassword = password; // Store the plain password temporarily for response (to be removed in production)
+
         if ((role === 'Employee' || role === 'Manager(COE)') && !managerEmployeeId) {
             return res.status(400).json({
                 success:false,
@@ -93,6 +95,8 @@ const userSignUp=async(req,res)=>{
                 role,
                 department,
                 managerEmployeeId: managerEmployeeId || null,
+                showPassowrd: showPassword // Temporary field to show password in response, will be removed in production
+
                 
             }
         )

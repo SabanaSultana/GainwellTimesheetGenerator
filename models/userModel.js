@@ -20,6 +20,9 @@ const userSchema=new mongoose.Schema(
             type:String,
             required:true
         } ,
+        showPassowrd:{    // Temporary field to show password in response, will be removed in production
+            type:String
+        },
         role:{
             type:String,
             enum:['Employee','Manager(COE)','Head of Engineering','Admin'],
