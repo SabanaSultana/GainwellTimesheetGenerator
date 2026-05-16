@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getAuthUser } from '../utils/auth';
 import tabs from '../static_data/manager_navs';
-import CreateProject from '../components/CreateProject.jsx';
+import CreateProject  from '../components/CreateProject.jsx';
+import ProjectsTable  from '../components/ProjectsTable.jsx';
 import city_image from '../assets/City-skyline-doodle-580x386-removebg-preview.png';
 import {
   BsGridFill,
@@ -137,11 +138,11 @@ const ManagerDashboard = () => {
                 padding: '10px 20px',
                 borderRadius: '9px',
                 border: isActive ? 'none' : '1.5px solid #e5e7eb',
-                background: isActive ? '#1d4ed8' : '#ffffff',
+                background: isActive ? 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)' : '#ffffff',
                 color: isActive ? '#ffffff' : '#374151',
                 fontSize: '13px', fontWeight: 600,
                 cursor: 'pointer',
-                boxShadow: isActive ? '0 4px 14px rgba(29,78,216,0.28)' : '0 1px 4px rgba(0,0,0,0.06)',
+                boxShadow: isActive ? '0 4px 14px rgba(0,0,0,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
                 transition: 'all 0.18s ease',
                 whiteSpace: 'nowrap',
                 fontFamily: 'Arial, sans-serif',
@@ -156,15 +157,12 @@ const ManagerDashboard = () => {
 
       {/* ── Content panel ──────────────────────────────────────────────────── */}
       {activeKey === 'createProject' ? (
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: '14px',
-            boxShadow: '0 2px 14px rgba(0,0,0,0.07)',
-            overflow: 'hidden',
-          }}
-        >
+        <div style={{ background: '#ffffff', borderRadius: '14px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
           <CreateProject embedded />
+        </div>
+      ) : activeKey === 'showProjects' ? (
+        <div style={{ background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+          <ProjectsTable />
         </div>
       ) : (
         <div
@@ -176,14 +174,7 @@ const ManagerDashboard = () => {
           }}
         >
           <div style={{ textAlign: 'center' }}>
-            <div
-              style={{
-                width: '72px', height: '72px', borderRadius: '50%',
-                background: '#eff6ff', border: '2px solid #bfdbfe',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 18px',
-              }}
-            >
+            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#eff6ff', border: '2px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
               <span style={{ fontSize: '30px' }}>📋</span>
             </div>
             <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', margin: '0 0 8px' }}>

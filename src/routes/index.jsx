@@ -1,13 +1,14 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import React from 'react';
-import Login from '../pages/Login.jsx';
-import Signup from '../pages/Signup.jsx';
-import App from '../App.jsx';
-import ProtectedRoute from '../components/ProtectedRoute.jsx';
+import Login             from '../pages/Login.jsx';
+import Signup            from '../pages/Signup.jsx';
+import App               from '../App.jsx';
+import ProtectedRoute    from '../components/ProtectedRoute.jsx';
 import RoleProtectedRoute from '../components/RoleProtectedRoute.jsx';
-import ManagerDashboard from '../pages/ManagerDashboard.jsx';
+import ManagerDashboard  from '../pages/ManagerDashboard.jsx';
 import EmployeeDashboard from '../pages/EmployeeDashboard.jsx';
-import CreateProject from '../components/CreateProject.jsx';
+import CreateProject     from '../components/CreateProject.jsx';
+import ProjectDetailPage from '../pages/ProjectDetailPage.jsx';
 
 /**
  * Route hierarchy:
@@ -58,6 +59,10 @@ const router = createBrowserRouter([
               {
                 path: '/dashboard/manager/:employeeId',
                 element: <ManagerDashboard />,
+              },
+              {
+                path: '/dashboard/manager/:employeeId/project/:projectId',
+                element: <ProjectDetailPage />,
               },
             ],
           },

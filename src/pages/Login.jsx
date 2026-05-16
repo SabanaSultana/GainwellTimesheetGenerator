@@ -300,7 +300,7 @@ const Login = () => {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  background: loading ? '#93b4f0' : '#1d4ed8',
+                  background: loading ? '#7aa0bc' : 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '8px',

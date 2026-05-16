@@ -2,74 +2,16 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getAuthUser } from '../utils/auth';
 import tabs from '../static_data/employee_navs';
+import EmployeeProjectsView from '../components/EmployeeProjectsView.jsx';
+import EmployeeWeeklySubmit  from '../components/EmployeeWeeklySubmit.jsx';
+import EmployeeHoursHistory  from '../components/EmployeeHoursHistory.jsx';
+import city_image from '../assets/City-skyline-doodle-580x386-removebg-preview.png';
 import {
   BsPerson,
   BsCalendarPlus,
   BsFolderFill,
   BsClockHistory,
 } from 'react-icons/bs';
-
-const CityAndPlane = () => (
-  <>
-    <style>{`
-      .emp-city-svg {
-        position: absolute;
-        left: 50%;
-        transform: translateX(-50%);
-        top: 0;
-        width: 30%;
-        height: 100%;
-        pointer-events: none;
-      }
-      @media (max-width: 1400px) { .emp-city-svg { width: 24%; } }
-      @media (max-width: 1100px) { .emp-city-svg { width: 18%; } }
-      @media (max-width: 860px)  { .emp-city-svg { display: none; } }
-    `}</style>
-    <svg
-      aria-hidden="true"
-      className="emp-city-svg"
-      viewBox="0 0 520 90"
-      fill="none"
-      preserveAspectRatio="xMidYMax meet"
-    >
-      <g opacity="0.55" transform="translate(370, 10)">
-        <ellipse cx="28" cy="8" rx="28" ry="5.5" fill="#86c8a0"/>
-        <polygon points="28,2 56,8 28,14" fill="#86c8a0"/>
-        <polygon points="10,6 0,0 4,8" fill="#86c8a0"/>
-        <polygon points="10,10 2,16 4,8" fill="#86c8a0"/>
-        <polygon points="48,7 60,4 56,8" fill="#86c8a0"/>
-      </g>
-      <rect x="20"  y="55" width="16" height="35" fill="#86c8a0" opacity="0.34" rx="1"/>
-      <rect x="40"  y="38" width="18" height="52" fill="#86c8a0" opacity="0.42" rx="1"/>
-      <rect x="62"  y="20" width="16" height="70" fill="#86c8a0" opacity="0.54" rx="1"/>
-      <rect x="65"  y="12" width="8"  height="10" fill="#86c8a0" opacity="0.54" rx="1"/>
-      <rect x="82"  y="45" width="20" height="45" fill="#86c8a0" opacity="0.36" rx="1"/>
-      <rect x="106" y="15" width="16" height="75" fill="#86c8a0" opacity="0.58" rx="1"/>
-      <rect x="109" y="6"  width="8"  height="11" fill="#86c8a0" opacity="0.58" rx="1"/>
-      <rect x="126" y="38" width="20" height="52" fill="#86c8a0" opacity="0.42" rx="1"/>
-      <rect x="150" y="28" width="16" height="62" fill="#86c8a0" opacity="0.48" rx="1"/>
-      <rect x="170" y="50" width="20" height="40" fill="#86c8a0" opacity="0.34" rx="1"/>
-      <rect x="194" y="18" width="18" height="72" fill="#86c8a0" opacity="0.54" rx="1"/>
-      <rect x="197" y="10" width="9"  height="10" fill="#86c8a0" opacity="0.54" rx="1"/>
-      <rect x="216" y="42" width="16" height="48" fill="#86c8a0" opacity="0.38" rx="1"/>
-      <rect x="236" y="30" width="20" height="60" fill="#86c8a0" opacity="0.46" rx="1"/>
-      <rect x="260" y="55" width="14" height="35" fill="#86c8a0" opacity="0.32" rx="1"/>
-      <rect x="278" y="22" width="18" height="68" fill="#86c8a0" opacity="0.50" rx="1"/>
-      <rect x="281" y="14" width="9"  height="10" fill="#86c8a0" opacity="0.50" rx="1"/>
-      <rect x="300" y="48" width="16" height="42" fill="#86c8a0" opacity="0.36" rx="1"/>
-      <rect x="320" y="35" width="20" height="55" fill="#86c8a0" opacity="0.42" rx="1"/>
-      <rect x="344" y="58" width="14" height="32" fill="#86c8a0" opacity="0.30" rx="1"/>
-      <rect x="362" y="25" width="18" height="65" fill="#86c8a0" opacity="0.48" rx="1"/>
-      <rect x="384" y="42" width="16" height="48" fill="#86c8a0" opacity="0.36" rx="1"/>
-      <rect x="404" y="18" width="20" height="72" fill="#86c8a0" opacity="0.52" rx="1"/>
-      <rect x="407" y="10" width="9"  height="10" fill="#86c8a0" opacity="0.52" rx="1"/>
-      <rect x="428" y="50" width="14" height="40" fill="#86c8a0" opacity="0.30" rx="1"/>
-      <rect x="446" y="32" width="18" height="58" fill="#86c8a0" opacity="0.44" rx="1"/>
-      <rect x="468" y="55" width="14" height="35" fill="#86c8a0" opacity="0.30" rx="1"/>
-      <rect x="486" y="22" width="16" height="68" fill="#86c8a0" opacity="0.46" rx="1"/>
-    </svg>
-  </>
-);
 
 const TAB_ICONS = {
   addWeekly: <BsCalendarPlus size={15} />,
@@ -98,7 +40,7 @@ const EmployeeDashboard = () => {
       {/* ── Header card ──────────────────────────────────────────────────── */}
       <div
         style={{
-          background: 'linear-gradient(to right, #ffffff 0%, #f3fdf7 25%, #e8faf1 55%, #d9f5e6 100%)',
+          background: 'linear-gradient(to right, #ffffff 0%, #f5f7ff 25%, #eaefff 55%, #dde7ff 100%)',
           borderRadius: '14px',
           marginBottom: '22px',
           boxShadow: '0 2px 14px rgba(0,0,0,0.07)',
@@ -110,8 +52,6 @@ const EmployeeDashboard = () => {
           minHeight: '88px',
         }}
       >
-        <CityAndPlane />
-
         {/* Left: icon + title */}
         <div
           style={{
@@ -123,11 +63,11 @@ const EmployeeDashboard = () => {
           <div
             style={{
               width: '52px', height: '52px', borderRadius: '12px', flexShrink: 0,
-              background: '#edfaf3', border: '1.5px solid #a7e3c0',
+              background: '#eeefff', border: '1.5px solid #c7d0f8',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            <BsPerson size={26} color="#16a34a" />
+            <BsPerson size={24} color="#4f46e5" />
           </div>
           <div>
             <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: '#0e1e3d', lineHeight: 1.2 }}>
@@ -147,12 +87,15 @@ const EmployeeDashboard = () => {
             alignItems: 'center',
             gap: '16px',
             flex: '0 1 340px',
-            minWidth: '260px',
+            minWidth: '300px',
             position: 'relative', zIndex: 1,
           }}
         >
           <div>
-            <p style={{ margin: 0, fontSize: '13px', color: '#16a34a', fontWeight: 500 }}>
+            <img src={city_image} className='h-[10vh] w-[90vw]' />
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: '13px', color: '#4f63d2', fontWeight: 500 }}>
               Welcome back,
             </p>
             <p style={{ margin: '2px 0 0', fontSize: '22px', fontWeight: 700, color: '#0e1e3d', lineHeight: 1.2 }}>
@@ -163,7 +106,7 @@ const EmployeeDashboard = () => {
             style={{
               marginLeft: '8px', flexShrink: 0,
               width: '52px', height: '52px', borderRadius: '50%',
-              background: 'rgba(22,163,74,0.12)', border: '1.5px solid rgba(22,163,74,0.22)',
+              background: 'rgba(79,99,210,0.12)', border: '1.5px solid rgba(79,99,210,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '26px',
             }}
@@ -186,11 +129,11 @@ const EmployeeDashboard = () => {
                 padding: '10px 20px',
                 borderRadius: '9px',
                 border: isActive ? 'none' : '1.5px solid #e5e7eb',
-                background: isActive ? '#16a34a' : '#ffffff',
+                background: isActive ? 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)' : '#ffffff',
                 color: isActive ? '#ffffff' : '#374151',
                 fontSize: '13px', fontWeight: 600,
                 cursor: 'pointer',
-                boxShadow: isActive ? '0 4px 14px rgba(22,163,74,0.28)' : '0 1px 4px rgba(0,0,0,0.06)',
+                boxShadow: isActive ? '0 4px 14px rgba(0,0,0,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
                 transition: 'all 0.18s ease',
                 whiteSpace: 'nowrap',
                 fontFamily: 'Arial, sans-serif',
@@ -207,29 +150,13 @@ const EmployeeDashboard = () => {
       <div
         style={{
           background: '#ffffff', borderRadius: '14px',
-          padding: '64px 40px', minHeight: '52vh',
+          padding: '28px 32px', minHeight: '52vh',
           boxShadow: '0 2px 14px rgba(0,0,0,0.07)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}
       >
-        <div style={{ textAlign: 'center' }}>
-          <div
-            style={{
-              width: '72px', height: '72px', borderRadius: '50%',
-              background: '#f0fdf4', border: '2px solid #bbf7d0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 18px',
-            }}
-          >
-            <span style={{ fontSize: '30px' }}>🕐</span>
-          </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', margin: '0 0 8px' }}>
-            {tabs.find((t) => t.key === activeKey)?.label}
-          </h2>
-          <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>
-            This section is under development.
-          </p>
-        </div>
+        {activeKey === 'addWeekly' && <EmployeeWeeklySubmit />}
+        {activeKey === 'projects'  && <EmployeeProjectsView />}
+        {activeKey === 'hours'     && <EmployeeHoursHistory />}
       </div>
     </div>
   );

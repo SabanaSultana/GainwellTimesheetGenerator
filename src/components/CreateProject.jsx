@@ -5,6 +5,8 @@ import { BsBarChartFill } from 'react-icons/bs';
 import { BsArrowCounterclockwise } from 'react-icons/bs';
 import { TbInfoCircle } from 'react-icons/tb';
 
+const countWords = (text) => text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+
 // ── Derive next ENT#### from existing codes ───────────────────────────────
 const generateNextCode = (codes) => {
   if (!codes || codes.length === 0) return 'ENT0001';
@@ -73,6 +75,7 @@ const CreateProject = ({ embedded = false }) => {
       e.projectCode = 'Format must be ENT#### (e.g. ENT0001)';
     }
     if (!formData.projectName.trim()) e.projectName = 'Project name is required';
+    if (countWords(formData.projectDescription) > 100) e.projectDescription = 'Maximum 100 words allowed';
     if (!formData.startDate)          e.startDate   = 'Start date is required';
     if (!formData.endDate) {
       e.endDate = 'End date is required';
@@ -270,8 +273,8 @@ const CreateProject = ({ embedded = false }) => {
                         fontSize: '12px', fontWeight: 700, cursor: 'pointer',
                         letterSpacing: '0.3px', transition: 'all 0.15s',
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = '#1d4ed8'; e.currentTarget.style.color = '#fff'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#1d4ed8'; }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)'; e.currentTarget.style.color = '#fff'; e.currentTarget.style.border = '1.5px solid transparent'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#eff6ff'; e.currentTarget.style.color = '#1d4ed8'; e.currentTarget.style.border = '1.5px solid #bfdbfe'; }}
                     >
                       {suggestedCode}
                     </button>
@@ -334,10 +337,16 @@ const CreateProject = ({ embedded = false }) => {
               rows={3}
               style={{
                 ...inputBase,
-                border: '1px solid #e2e8f0', background: '#ffffff',
+                border: `1px solid ${errors.projectDescription ? '#f87171' : '#e2e8f0'}`,
+                background: errors.projectDescription ? '#fff5f5' : '#ffffff',
                 resize: 'vertical', fontFamily: 'inherit', minHeight: '80px',
+                overflowY: 'auto', overflowX: 'hidden',
               }}
             />
+            <p style={{ textAlign: 'right', fontSize: '11px', margin: '3px 0 0', color: countWords(formData.projectDescription) > 100 ? '#ef4444' : '#9ca3af' }}>
+              {countWords(formData.projectDescription)}/100 words
+            </p>
+            {errors.projectDescription && <p style={{ color: '#ef4444', fontSize: '11.5px', marginTop: '2px' }}>{errors.projectDescription}</p>}
           </div>
 
           {/* ── Start + End dates side by side ───────────────────────────── */}
@@ -389,11 +398,11 @@ const CreateProject = ({ embedded = false }) => {
               disabled={loading || fetchingCode}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
-                background: loading || fetchingCode ? '#93b4f0' : '#1d4ed8',
+                background: loading || fetchingCode ? '#7aa0bc' : 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)',
                 color: '#ffffff', border: 'none', borderRadius: '8px',
                 padding: '11px 28px', fontSize: '14px', fontWeight: 600,
                 cursor: loading || fetchingCode ? 'not-allowed' : 'pointer',
-                boxShadow: loading || fetchingCode ? 'none' : '0 4px 12px rgba(29,78,216,0.3)',
+                boxShadow: loading || fetchingCode ? 'none' : '0 4px 12px rgba(0,0,0,0.12)',
                 transition: 'all 0.15s',
               }}
             >

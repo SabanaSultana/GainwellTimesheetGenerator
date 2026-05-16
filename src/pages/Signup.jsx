@@ -284,7 +284,7 @@ const Signup = () => {
                 type="submit"
                 disabled={loading}
                 style={{
-                  width: '100%', background: loading ? '#93b4f0' : '#1d4ed8',
+                  width: '100%', background: loading ? '#7aa0bc' : 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)',
                   color: '#fff', border: 'none', borderRadius: '8px',
                   padding: '13px 0', fontSize: '15px', fontWeight: 600,
                   cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '0.3px',
