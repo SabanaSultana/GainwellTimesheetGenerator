@@ -83,10 +83,23 @@ const isAdmin=(req,res,next)=>{
     next();
 }
 
+// Allows Manager(COE), Head of Engineering, and Admin
+const isManagerLevel = (req, res, next) => {
+  const allowed = ['Manager(COE)', 'Head of Engineering', 'Admin'];
+  if (!allowed.includes(req.user.role)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. Manager level or above required.',
+    });
+  }
+  next();
+};
+
 module.exports = {
   authMiddleware,
   isEmployee,
   isManager,
   isHeadManager,
   isAdmin,
+  isManagerLevel,
 };
