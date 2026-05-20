@@ -23,6 +23,7 @@ const workLogSchema = new mongoose.Schema(
     trainingHours: { type: Number, default: 0, min: 0 },
     leaveHours:    { type: Number, default: 0, min: 0 },
     submittedAt:   { type: Date },
+    remarks:       { type: String, default: '' },
     status:        { type: String, enum: ['draft', 'submitted'], default: 'draft' },
     editHistory:   [editEntrySchema],
   },

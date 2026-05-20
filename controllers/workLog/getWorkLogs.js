@@ -1,6 +1,7 @@
-const WorkLog    = require('../../models/workLogModel');
-const WeeklyPlan = require('../../models/weeklyPlanModel');
-const User       = require('../../models/userModel');
+const WorkLog             = require('../../models/workLogModel');
+const WeeklyPlan          = require('../../models/weeklyPlanModel');
+const WeeklyProjectConfig = require('../../models/weeklyProjectConfigModel');
+const User                = require('../../models/userModel');
 
 const getWorkLogs = async (req, res) => {
   try {
@@ -27,9 +28,15 @@ const getWorkLogs = async (req, res) => {
     const planMap = {};
     plans.forEach((p) => { planMap[`${p.employeeId}-${p.year}-${p.weekNumber}`] = p.plannedHours; });
 
+    // Attach totalWeeklyHours from project config
+    const configs    = await WeeklyProjectConfig.find({ project: projectId });
+    const configMap  = {};
+    configs.forEach((c) => { configMap[`${c.year}-${c.weekNumber}`] = c.totalWeeklyHours; });
+
     const enriched = logs.map((log) => ({
       ...log.toObject(),
-      plannedHours: planMap[`${log.employeeId}-${log.year}-${log.weekNumber}`] || 0,
+      plannedHours:     planMap[`${log.employeeId}-${log.year}-${log.weekNumber}`] || 0,
+      totalWeeklyHours: configMap[`${log.year}-${log.weekNumber}`] || 0,
     }));
 
     return res.status(200).json({ success: true, data: enriched });

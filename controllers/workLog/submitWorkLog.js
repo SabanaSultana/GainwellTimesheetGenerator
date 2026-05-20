@@ -5,7 +5,7 @@ const User       = require('../../models/userModel');
 
 const submitWorkLog = async (req, res) => {
   try {
-    const { projectId, year, weekNumber, workedHours = 0, trainingHours = 0, leaveHours = 0, justification } = req.body;
+    const { projectId, year, weekNumber, workedHours = 0, trainingHours = 0, leaveHours = 0, remarks = '', justification } = req.body;
 
     if (!projectId || !year || !weekNumber) {
       return res.status(400).json({ success: false, message: 'projectId, year, and weekNumber are required' });
@@ -16,34 +16,41 @@ const submitWorkLog = async (req, res) => {
 
     const employee = await User.findById(req.user.id).select('name employeeId department');
 
-    // Verify allocation
-    const allocation = await Allocation.findOne({ project: projectId, employee: req.user.id, status: 'active' });
-    if (!allocation) {
-      return res.status(403).json({ success: false, message: 'You are not allocated to this project' });
+    // Employee must have either an active allocation OR a weekly plan for this week
+    const [allocation, plan] = await Promise.all([
+      Allocation.findOne({ project: projectId, employee: req.user.id, status: 'active' }),
+      WeeklyPlan.findOne({ project: projectId, employee: req.user.id, year, weekNumber }),
+    ]);
+
+    if (!allocation && !plan) {
+      return res.status(403).json({
+        success: false,
+        message: 'You do not have a plan or allocation for this project and week',
+      });
     }
 
-    // Check weekly plan
-    const plan = await WeeklyPlan.findOne({ project: projectId, employee: req.user.id, year, weekNumber });
     const plannedHours = plan?.plannedHours || 0;
 
-    if (workedHours > plannedHours) {
+    if (plannedHours > 0 && workedHours > plannedHours) {
       return res.status(400).json({
         success: false,
         message: `Worked hours (${workedHours}) cannot exceed planned hours (${plannedHours}) for this week`,
       });
     }
 
-    // Check total won't exceed allocated
-    const allLogs = await WorkLog.find({ project: projectId, employee: req.user.id, status: 'submitted' });
-    const alreadyConsumed = allLogs
-      .filter((l) => !(l.year === year && l.weekNumber === weekNumber))
-      .reduce((sum, l) => sum + (l.workedHours || 0), 0);
+    // Only check the allocation budget cap when there is an active allocation
+    if (allocation) {
+      const allLogs = await WorkLog.find({ project: projectId, employee: req.user.id, status: 'submitted' });
+      const alreadyConsumed = allLogs
+        .filter((l) => !(l.year === Number(year) && l.weekNumber === Number(weekNumber)))
+        .reduce((sum, l) => sum + (l.workedHours || 0), 0);
 
-    if (alreadyConsumed + workedHours > allocation.totalAllocatedHours) {
-      return res.status(400).json({
-        success: false,
-        message: `Total worked hours would exceed your allocated hours (${allocation.totalAllocatedHours})`,
-      });
+      if (alreadyConsumed + workedHours > allocation.totalAllocatedHours) {
+        return res.status(400).json({
+          success: false,
+          message: `Total worked hours would exceed your allocated hours (${allocation.totalAllocatedHours})`,
+        });
+      }
     }
 
     const existing = await WorkLog.findOne({ project: projectId, employee: req.user.id, year, weekNumber });
@@ -69,6 +76,7 @@ const submitWorkLog = async (req, res) => {
       existing.workedHours   = workedHours;
       existing.trainingHours = trainingHours;
       existing.leaveHours    = leaveHours;
+      existing.remarks       = remarks;
       existing.status        = 'submitted';
       existing.submittedAt   = new Date();
       record = await existing.save();
@@ -83,6 +91,7 @@ const submitWorkLog = async (req, res) => {
         workedHours,
         trainingHours,
         leaveHours,
+        remarks,
         status:        'submitted',
         submittedAt:   new Date(),
       });

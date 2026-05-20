@@ -1,43 +1,86 @@
 const Allocation = require('../../models/allocationModel');
 const WorkLog    = require('../../models/workLogModel');
 const WeeklyPlan = require('../../models/weeklyPlanModel');
+const Project    = require('../../models/projectModel');
+const User       = require('../../models/userModel');
+
+// ISO-compatible current week number
+function currentISOWeek() {
+  const now = new Date();
+  const jan1 = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+  const dayOfYear = Math.floor((now - jan1) / 86400000) + 1;
+  return Math.ceil((dayOfYear + jan1.getUTCDay()) / 7);
+}
 
 const getEmployeeProjects = async (req, res) => {
   try {
-    const allocations = await Allocation.find({ employee: req.user.id, status: 'active' })
+    const userId = req.user.id;
+    const now    = new Date();
+    const weekNo = currentISOWeek();
+
+    // Employee's own user record (for department fallback)
+    const empUser = await User.findById(userId).select('department');
+
+    // ── 1. Active allocations ──────────────────────────────────────────────
+    const allocations = await Allocation.find({ employee: userId, status: 'active' })
       .populate('project', 'projectCode projectName projectDescription startDate endDate')
       .populate('allocatedBy', 'name employeeId');
 
-    const enriched = await Promise.all(
-      allocations.map(async (a) => {
-        const logs = await WorkLog.find({ project: a.project._id, employee: req.user.id, status: 'submitted' });
-        const consumedHours = logs.reduce((sum, l) => sum + (l.workedHours || 0), 0);
+    const allocatedProjectIds = new Set(allocations.map((a) => String(a.project._id)));
 
-        // Current week plan
-        const now = new Date();
-        const startOfYear = new Date(now.getFullYear(), 0, 1);
-        const weekNo = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
-        const currentPlan = await WeeklyPlan.findOne({
-          project:    a.project._id,
-          employee:   req.user.id,
-          year:       now.getFullYear(),
-          weekNumber: weekNo,
-        });
+    const enrichAllocation = async (a) => {
+      const logs = await WorkLog.find({ project: a.project._id, employee: userId, status: 'submitted' });
+      const consumedHours = logs.reduce((sum, l) => sum + (l.workedHours || 0), 0);
+      const currentPlan = await WeeklyPlan.findOne({
+        project: a.project._id, employee: userId,
+        year: now.getFullYear(), weekNumber: weekNo,
+      });
+      return {
+        allocationId:        String(a._id),
+        project:             a.project,
+        department:          a.department,
+        totalAllocatedHours: a.totalAllocatedHours,
+        consumedHours,
+        remainingHours:      Math.max(0, a.totalAllocatedHours - consumedHours),
+        currentWeekPlan:     currentPlan ? currentPlan.plannedHours : 0,
+        allocatedBy:         a.allocatedBy,
+      };
+    };
 
-        return {
-          allocationId:        a._id,
-          project:             a.project,
-          department:          a.department,
-          totalAllocatedHours: a.totalAllocatedHours,
-          consumedHours,
-          remainingHours:      Math.max(0, a.totalAllocatedHours - consumedHours),
-          currentWeekPlan:     currentPlan ? currentPlan.plannedHours : 0,
-          allocatedBy:         a.allocatedBy,
-        };
-      })
-    );
+    // ── 2. Projects via WeeklyPlan that have NO active allocation ──────────
+    const planProjectIds     = await WeeklyPlan.distinct('project', { employee: userId });
+    const unallocatedIds     = planProjectIds.filter((id) => !allocatedProjectIds.has(String(id)));
 
-    return res.status(200).json({ success: true, data: enriched });
+    const enrichPlanProject = async (projectId) => {
+      const project = await Project.findById(projectId)
+        .select('projectCode projectName projectDescription startDate endDate');
+      if (!project) return null;
+      const logs = await WorkLog.find({ project: projectId, employee: userId, status: 'submitted' });
+      const consumedHours = logs.reduce((sum, l) => sum + (l.workedHours || 0), 0);
+      const currentPlan = await WeeklyPlan.findOne({
+        project: projectId, employee: userId,
+        year: now.getFullYear(), weekNumber: weekNo,
+      });
+      return {
+        allocationId:        `plan_${String(projectId)}`,
+        project,
+        department:          empUser?.department || '',
+        totalAllocatedHours: 0,
+        consumedHours,
+        remainingHours:      0,
+        currentWeekPlan:     currentPlan ? currentPlan.plannedHours : 0,
+        allocatedBy:         null,
+      };
+    };
+
+    const [allocEnriched, planEnriched] = await Promise.all([
+      Promise.all(allocations.map(enrichAllocation)),
+      Promise.all(unallocatedIds.map(enrichPlanProject)),
+    ]);
+
+    const data = [...allocEnriched, ...planEnriched.filter(Boolean)];
+
+    return res.status(200).json({ success: true, data });
   } catch (error) {
     console.error('Error in getEmployeeProjects:', error);
     return res.status(500).json({ success: false, message: 'Internal Server Error' });

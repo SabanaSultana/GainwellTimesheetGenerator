@@ -8,14 +8,17 @@ const {
     getUsersByRole,
     getUsersByManagerId
 } = require('../../controllers/user/getUser')
-const userSignUp = require('../../controllers/user/userSignUp')
-const userLogin = require('../../controllers/user/userLogin')
-const userLogout = require('../../controllers/user/userLogout')
+const userSignUp      = require('../../controllers/user/userSignUp')
+const userLogin       = require('../../controllers/user/userLogin')
+const userLogout      = require('../../controllers/user/userLogout')
+const getTeamMembers  = require('../../controllers/team/getTeamMembers')
+const { authMiddleware, isManagerLevel } = require('../../middlewares/auth')
 
 router.post('/signup', userSignUp)
 router.post('/login', userLogin)
 router.post('/logout', userLogout)
 
+router.get('/team', authMiddleware, isManagerLevel, getTeamMembers)
 router.get('/', getAllUsers)
 router.get('/id/:id', getUserById)
 router.get('/employee/:employeeId', getUserByEmployeeId)

@@ -1,6 +1,7 @@
-const WeeklyPlan = require('../../models/weeklyPlanModel');
-const WorkLog    = require('../../models/workLogModel');
-const User       = require('../../models/userModel');
+const WeeklyPlan          = require('../../models/weeklyPlanModel');
+const WorkLog             = require('../../models/workLogModel');
+const WeeklyProjectConfig = require('../../models/weeklyProjectConfigModel');
+const User                = require('../../models/userModel');
 
 const getWeeklyPlans = async (req, res) => {
   try {
@@ -21,27 +22,40 @@ const getWeeklyPlans = async (req, res) => {
       .populate('plannedBy', 'name employeeId')
       .sort({ year: -1, weekNumber: -1 });
 
-    // Pair with work logs
+    // Work logs for cross-reference
     let logQuery = { project: projectId };
     if (year)       logQuery.year       = Number(year);
     if (weekNumber) logQuery.weekNumber = Number(weekNumber);
     if (req.user.role === 'Employee') logQuery.employee = req.user.id;
 
-    const logs = await WorkLog.find(logQuery);
+    const [logs, configs] = await Promise.all([
+      WorkLog.find(logQuery),
+      WeeklyProjectConfig.find({ project: projectId }),
+    ]);
+
     const logMap = {};
     logs.forEach((l) => {
       logMap[`${l.employeeId}-${l.year}-${l.weekNumber}`] = l;
+    });
+
+    const configMap = {};
+    configs.forEach((c) => {
+      configMap[`${c.year}-${c.weekNumber}`] = c.totalWeeklyHours;
     });
 
     const enriched = plans.map((plan) => {
       const log = logMap[`${plan.employeeId}-${plan.year}-${plan.weekNumber}`] || {};
       return {
         ...plan.toObject(),
-        workedHours:   log.workedHours   || 0,
-        trainingHours: log.trainingHours || 0,
-        leaveHours:    log.leaveHours    || 0,
-        logStatus:     log.status        || 'not submitted',
-        remainingHours: Math.max(0, plan.plannedHours - (log.workedHours || 0)),
+        workedHours:      log.workedHours   || 0,
+        trainingHours:    log.trainingHours || 0,
+        leaveHours:       log.leaveHours    || 0,
+        remarks:          log.remarks       || '',
+        status:           log.status        || null,
+        logId:            log._id           || null,
+        logStatus:        log.status        || 'not submitted',
+        totalWeeklyHours: configMap[`${plan.year}-${plan.weekNumber}`] || 0,
+        remainingHours:   Math.max(0, plan.plannedHours - (log.workedHours || 0)),
       };
     });
 
