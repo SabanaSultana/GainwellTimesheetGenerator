@@ -2,8 +2,13 @@ import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getAuthUser } from '../utils/auth';
 import tabs from '../static_data/manager_navs';
-import CreateProject  from '../components/CreateProject.jsx';
-import ProjectsTable  from '../components/ProjectsTable.jsx';
+import CreateProject           from '../components/CreateProject.jsx';
+import ProjectsTable           from '../components/ProjectsTable.jsx';
+import TeamSection             from '../components/TeamSection.jsx';
+import AddWeeklyPlanSection    from '../components/AddWeeklyPlanSection.jsx';
+import WeeklySummarySection    from '../components/WeeklySummarySection.jsx';
+import ReportGenerationSection from '../components/ReportGenerationSection.jsx';
+import PlanGridSection         from '../components/PlanGridSection.jsx';
 import city_image from '../assets/City-skyline-doodle-580x386-removebg-preview.png';
 import {
   BsGridFill,
@@ -13,6 +18,7 @@ import {
   BsCalendarWeek,
   BsBarChartLine,
   BsFileEarmarkText,
+  BsTable,
 } from 'react-icons/bs';
 
 
@@ -22,6 +28,7 @@ const TAB_ICONS = {
   showProjects:  <BsListUl          size={15} />,
   team:          <BsPeopleFill      size={15} />,
   addPlan:       <BsCalendarWeek    size={15} />,
+  planGrid:      <BsTable        size={15} />,
   report:        <BsBarChartLine    size={15} />,
   reportReview:  <BsFileEarmarkText size={15} />,
 };
@@ -140,7 +147,7 @@ const ManagerDashboard = () => {
                 border: isActive ? 'none' : '1.5px solid #e5e7eb',
                 background: isActive ? 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)' : '#ffffff',
                 color: isActive ? '#ffffff' : '#374151',
-                fontSize: '13px', fontWeight: 600,
+                fontSize: '14px', fontWeight: 600,
                 cursor: 'pointer',
                 boxShadow: isActive ? '0 4px 14px rgba(0,0,0,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
                 transition: 'all 0.18s ease',
@@ -155,37 +162,28 @@ const ManagerDashboard = () => {
         })}
       </div>
 
-      {/* ── Content panel ──────────────────────────────────────────────────── */}
-      {activeKey === 'createProject' ? (
-        <div style={{ background: '#ffffff', borderRadius: '14px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-          <CreateProject embedded />
-        </div>
-      ) : activeKey === 'showProjects' ? (
-        <div style={{ background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
-          <ProjectsTable />
-        </div>
-      ) : (
-        <div
-          style={{
-            background: '#ffffff', borderRadius: '14px',
-            padding: '64px 40px', minHeight: '52vh',
-            boxShadow: '0 2px 14px rgba(0,0,0,0.07)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#eff6ff', border: '2px solid #bfdbfe', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
-              <span style={{ fontSize: '30px' }}>📋</span>
-            </div>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1f2937', margin: '0 0 8px' }}>
-              {tabs.find((t) => t.key === activeKey)?.label}
-            </h2>
-            <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>
-              This section is under development.
-            </p>
-          </div>
-        </div>
-      )}
+      {/* ── Content panel — always mounted, hidden with display:none to preserve state ── */}
+      <div style={{ display: activeKey === 'createProject' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+        <CreateProject embedded />
+      </div>
+      <div style={{ display: activeKey === 'showProjects' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+        <ProjectsTable />
+      </div>
+      <div style={{ display: activeKey === 'team' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+        <TeamSection />
+      </div>
+      <div style={{ display: activeKey === 'addPlan' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+        <AddWeeklyPlanSection />
+      </div>
+      <div style={{ display: activeKey === 'planGrid' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+        <PlanGridSection />
+      </div>
+      <div style={{ display: activeKey === 'reportReview' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+        <WeeklySummarySection />
+      </div>
+      <div style={{ display: activeKey === 'report' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+        <ReportGenerationSection />
+      </div>
     </div>
   );
 };

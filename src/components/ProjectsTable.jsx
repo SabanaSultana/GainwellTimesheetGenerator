@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BsSearch, BsEye, BsPencil, BsTrash } from 'react-icons/bs';
+import { BsSearch, BsClockHistory, BsPencil, BsTrash } from 'react-icons/bs';
 import { getAuthUser } from '../utils/auth';
 import SummaryApi from '../apis/index.jsx';
 import EditProjectModal from './EditProjectModal.jsx';
+import JustificationHistoryModal from './JustificationHistoryModal.jsx';
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
@@ -28,8 +29,9 @@ const ProjectsTable = () => {
   const [search, setSearch]               = useState('');
   const [debouncedSearch, setDebounced]   = useState('');
   const [sortKey, setSortKey]             = useState('code-asc');
-  const [editTarget, setEditTarget]       = useState(null);
-  const [deleteTarget, setDeleteTarget]   = useState(null);
+  const [editTarget, setEditTarget]             = useState(null);
+  const [justificationTarget, setJustificationTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget]         = useState(null);
   const [deleteJust, setDeleteJust]       = useState('');
   const [deleting, setDeleting]           = useState(false);
   const [deleteError, setDeleteError]     = useState('');
@@ -218,11 +220,11 @@ const ProjectsTable = () => {
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <button
-                        title="Track project"
-                        onClick={() => navigate(`/dashboard/manager/${employeeId}/project/${p._id}`)}
+                        title="View justification history"
+                        onClick={() => setJustificationTarget(p)}
                         style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
                       >
-                        <BsEye size={13} /> Track
+                        <BsClockHistory size={13} /> See Justification
                       </button>
                       <button
                         title="Edit project"
@@ -250,6 +252,7 @@ const ProjectsTable = () => {
       )}
 
       <EditProjectModal project={editTarget} onClose={() => setEditTarget(null)} onSuccess={handleEditSuccess} />
+      <JustificationHistoryModal project={justificationTarget} onClose={() => setJustificationTarget(null)} />
 
       {/* Delete confirmation modal */}
       {deleteTarget && (

@@ -2,25 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   BsArrowLeft, BsFileEarmarkText, BsBuilding, BsPeopleFill,
-  BsCalendarWeek, BsClipboardData, BsShieldCheck,
+  BsCalendarWeek, BsShieldCheck,
 } from 'react-icons/bs';
 import SummaryApi from '../apis/index.jsx';
-import DeptHoursSection    from '../components/DeptHoursSection.jsx';
-import AllocationSection   from '../components/AllocationSection.jsx';
-import WeeklyPlanSection   from '../components/WeeklyPlanSection.jsx';
-import WorkTrackingSection from '../components/WorkTrackingSection.jsx';
-import AuditLogsSection    from '../components/AuditLogsSection.jsx';
+import DeptHoursSection  from '../components/DeptHoursSection.jsx';
+import AllocationSection from '../components/AllocationSection.jsx';
+import WeeklyPlanSection from '../components/WeeklyPlanSection.jsx';
+import AuditLogsSection  from '../components/AuditLogsSection.jsx';
 
 const fmt = (d) =>
   d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const TABS = [
-  { key: 'overview',   label: 'Overview',         icon: <BsFileEarmarkText size={14} /> },
-  { key: 'dept',       label: 'Dept Hours',        icon: <BsBuilding        size={14} /> },
-  { key: 'allocation', label: 'Allocation',        icon: <BsPeopleFill      size={14} /> },
-  { key: 'weekly',     label: 'Weekly Plan',       icon: <BsCalendarWeek    size={14} /> },
-  { key: 'tracking',  label: 'Work Tracking',     icon: <BsClipboardData   size={14} /> },
-  { key: 'audit',     label: 'Audit Logs',        icon: <BsShieldCheck     size={14} /> },
+  { key: 'overview',   label: 'Overview',    icon: <BsFileEarmarkText size={14} /> },
+  { key: 'dept',       label: 'Dept Hours',  icon: <BsBuilding        size={14} /> },
+  { key: 'allocation', label: 'Allocation',  icon: <BsPeopleFill      size={14} /> },
+  { key: 'weekly',     label: 'Weekly Plan', icon: <BsCalendarWeek    size={14} /> },
+  { key: 'audit',      label: 'Audit Logs',  icon: <BsShieldCheck     size={14} /> },
 ];
 
 const ProjectDetailPage = () => {
@@ -187,11 +185,10 @@ const ProjectDetailPage = () => {
           </div>
         )}
 
-        {activeTab === 'dept'       && <DeptHoursSection    projectId={projectId} />}
-        {activeTab === 'allocation' && <AllocationSection   projectId={projectId} />}
-        {activeTab === 'weekly'     && <WeeklyPlanSection   projectId={projectId} />}
-        {activeTab === 'tracking'   && <WorkTrackingSection projectId={projectId} />}
-        {activeTab === 'audit'      && <AuditLogsSection    projectId={projectId} />}
+        {activeTab === 'dept'       && <DeptHoursSection  projectId={projectId} />}
+        {activeTab === 'allocation' && <AllocationSection projectId={projectId} />}
+        {activeTab === 'weekly'     && <WeeklyPlanSection projectId={projectId} />}
+        {activeTab === 'audit'      && <AuditLogsSection  projectId={projectId} />}
       </div>
     </div>
   );

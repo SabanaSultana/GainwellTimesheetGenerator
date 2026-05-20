@@ -31,13 +31,28 @@ const SummaryApi = {
   removeAllocation: { url: `${backendDomain}/api/allocations`, method: 'delete' }, // append /:id
 
   // ── Weekly Plans ──────────────────────────────────────────────────────────
-  getWeeklyPlans:   { url: `${backendDomain}/api/weekly-plans`, method: 'get'  }, // append /:projectId
-  upsertWeeklyPlan: { url: `${backendDomain}/api/weekly-plans`, method: 'post' },
+  getWeeklyPlans:      { url: `${backendDomain}/api/weekly-plans`,       method: 'get'  }, // append /:projectId
+  upsertWeeklyPlan:    { url: `${backendDomain}/api/weekly-plans`,       method: 'post' },
+  getAllWeeklyPlans:    { url: `${backendDomain}/api/weekly-plans/all`,   method: 'get'  },
+  bulkUpsertWeeklyPlan:{ url: `${backendDomain}/api/weekly-plans/bulk`,  method: 'post' },
+
+  // ── Weekly Project Config ─────────────────────────────────────────────────
+  getWeeklyProjectConfig:    { url: `${backendDomain}/api/weekly-project-config`, method: 'get'  }, // append /:projectId
+  upsertWeeklyProjectConfig: { url: `${backendDomain}/api/weekly-project-config`, method: 'post' },
 
   // ── Work Logs ─────────────────────────────────────────────────────────────
-  getWorkLogs:         { url: `${backendDomain}/api/work-logs`,                  method: 'get'  }, // append /:projectId
-  submitWorkLog:       { url: `${backendDomain}/api/work-logs`,                  method: 'post' },
-  getEmployeeProjects: { url: `${backendDomain}/api/work-logs/employee-projects`, method: 'get' },
+  getWorkLogs:         { url: `${backendDomain}/api/work-logs`,                   method: 'get'  }, // append /:projectId
+  submitWorkLog:       { url: `${backendDomain}/api/work-logs`,                   method: 'post' },
+  getEmployeeProjects: { url: `${backendDomain}/api/work-logs/employee-projects`, method: 'get'  },
+
+  // ── Team ──────────────────────────────────────────────────────────────────
+  getTeamMembers: { url: `${backendDomain}/api/users/team`, method: 'get' },
+
+  // ── Weekly Summary ────────────────────────────────────────────────────────
+  getWeeklySummary: { url: `${backendDomain}/api/weekly-summary`, method: 'get' },
+
+  // ── Reports ───────────────────────────────────────────────────────────────
+  generateReport: { url: `${backendDomain}/api/reports/generate`, method: 'post' },
 
   // ── Audit Logs ────────────────────────────────────────────────────────────
   getAuditLogs: { url: `${backendDomain}/api/audit-logs`, method: 'get' },

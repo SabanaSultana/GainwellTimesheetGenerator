@@ -3,6 +3,7 @@ const tabs = [
     { key: "showProjects", label: "Show Projects" },
     { key: "team", label: "Your Team" },
     { key: "addPlan", label: "Add Weekly Plan" },
+    { key: "planGrid", label: "Plan vs Actual" },
     // { key: "showTimesheets", label: "Team Timesheets" },
     // { key: "showPlans", label: "Team's Weekly Plans" },
     { key: "report", label: "Generate Report" },
