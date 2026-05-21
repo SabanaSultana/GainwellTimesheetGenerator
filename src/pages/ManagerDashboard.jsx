@@ -6,9 +6,9 @@ import CreateProject           from '../components/CreateProject.jsx';
 import ProjectsTable           from '../components/ProjectsTable.jsx';
 import TeamSection             from '../components/TeamSection.jsx';
 import AddWeeklyPlanSection    from '../components/AddWeeklyPlanSection.jsx';
-import WeeklySummarySection    from '../components/WeeklySummarySection.jsx';
 import ReportGenerationSection from '../components/ReportGenerationSection.jsx';
 import PlanGridSection         from '../components/PlanGridSection.jsx';
+import WeeklyReviewSection     from '../components/WeeklyReviewSection.jsx';
 import city_image from '../assets/City-skyline-doodle-580x386-removebg-preview.png';
 import {
   BsGridFill,
@@ -17,8 +17,8 @@ import {
   BsPeopleFill,
   BsCalendarWeek,
   BsBarChartLine,
-  BsFileEarmarkText,
   BsTable,
+  BsEye,
 } from 'react-icons/bs';
 
 
@@ -28,9 +28,9 @@ const TAB_ICONS = {
   showProjects:  <BsListUl          size={15} />,
   team:          <BsPeopleFill      size={15} />,
   addPlan:       <BsCalendarWeek    size={15} />,
-  planGrid:      <BsTable        size={15} />,
+  planGrid:      <BsTable           size={15} />,
+  weeklyReview:  <BsEye             size={15} />,
   report:        <BsBarChartLine    size={15} />,
-  reportReview:  <BsFileEarmarkText size={15} />,
 };
 
 const ManagerDashboard = () => {
@@ -40,6 +40,9 @@ const ManagerDashboard = () => {
   const firstName = user?.name?.split(' ')[0] ?? '';
 
   const [activeKey, setActiveKey] = useState(tabs[0].key);
+  const [projectsVersion, setProjectsVersion] = useState(0);
+
+  const handleProjectCreated = () => setProjectsVersion((v) => v + 1);
 
   return (
     <div
@@ -164,10 +167,10 @@ const ManagerDashboard = () => {
 
       {/* ── Content panel — always mounted, hidden with display:none to preserve state ── */}
       <div style={{ display: activeKey === 'createProject' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-        <CreateProject embedded />
+        <CreateProject embedded onSuccess={handleProjectCreated} />
       </div>
       <div style={{ display: activeKey === 'showProjects' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
-        <ProjectsTable />
+        <ProjectsTable refreshKey={projectsVersion} />
       </div>
       <div style={{ display: activeKey === 'team' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
         <TeamSection />
@@ -178,8 +181,8 @@ const ManagerDashboard = () => {
       <div style={{ display: activeKey === 'planGrid' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
         <PlanGridSection />
       </div>
-      <div style={{ display: activeKey === 'reportReview' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
-        <WeeklySummarySection />
+      <div style={{ display: activeKey === 'weeklyReview' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
+        <WeeklyReviewSection />
       </div>
       <div style={{ display: activeKey === 'report' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
         <ReportGenerationSection />

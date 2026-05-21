@@ -31,19 +31,24 @@ const SummaryApi = {
   removeAllocation: { url: `${backendDomain}/api/allocations`, method: 'delete' }, // append /:id
 
   // ── Weekly Plans ──────────────────────────────────────────────────────────
-  getWeeklyPlans:      { url: `${backendDomain}/api/weekly-plans`,       method: 'get'  }, // append /:projectId
-  upsertWeeklyPlan:    { url: `${backendDomain}/api/weekly-plans`,       method: 'post' },
-  getAllWeeklyPlans:    { url: `${backendDomain}/api/weekly-plans/all`,   method: 'get'  },
-  bulkUpsertWeeklyPlan:{ url: `${backendDomain}/api/weekly-plans/bulk`,  method: 'post' },
+  getWeeklyPlans:           { url: `${backendDomain}/api/weekly-plans`,                    method: 'get'  }, // append /:projectId
+  upsertWeeklyPlan:         { url: `${backendDomain}/api/weekly-plans`,                    method: 'post' },
+  getAllWeeklyPlans:         { url: `${backendDomain}/api/weekly-plans/all`,                method: 'get'  },
+  bulkUpsertWeeklyPlan:     { url: `${backendDomain}/api/weekly-plans/bulk`,               method: 'post' },
+  getEmployeeWeekCapacity:  { url: `${backendDomain}/api/weekly-plans/employee-capacity`,  method: 'get'  },
+
+  // ── Weekly Cap (global per year+week) ─────────────────────────────────────
+  getWeeklyCap: { url: `${backendDomain}/api/weekly-cap`, method: 'get' },
 
   // ── Weekly Project Config ─────────────────────────────────────────────────
   getWeeklyProjectConfig:    { url: `${backendDomain}/api/weekly-project-config`, method: 'get'  }, // append /:projectId
   upsertWeeklyProjectConfig: { url: `${backendDomain}/api/weekly-project-config`, method: 'post' },
 
   // ── Work Logs ─────────────────────────────────────────────────────────────
-  getWorkLogs:         { url: `${backendDomain}/api/work-logs`,                   method: 'get'  }, // append /:projectId
-  submitWorkLog:       { url: `${backendDomain}/api/work-logs`,                   method: 'post' },
-  getEmployeeProjects: { url: `${backendDomain}/api/work-logs/employee-projects`, method: 'get'  },
+  getWorkLogs:            { url: `${backendDomain}/api/work-logs`,                   method: 'get'  }, // append /:projectId
+  submitWorkLog:          { url: `${backendDomain}/api/work-logs`,                   method: 'post' },
+  getEmployeeProjects:    { url: `${backendDomain}/api/work-logs/employee-projects`, method: 'get'  },
+  managerUpdateWorkLog:   { url: `${backendDomain}/api/work-logs/manager-update`,    method: 'post' },
 
   // ── Team ──────────────────────────────────────────────────────────────────
   getTeamMembers: { url: `${backendDomain}/api/users/team`, method: 'get' },

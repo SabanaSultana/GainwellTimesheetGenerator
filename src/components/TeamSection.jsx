@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BsPeopleFill, BsFolderFill, BsSearch, BsChevronDown, BsChevronUp, BsEnvelope } from 'react-icons/bs';
+import { useNavigate, useParams } from 'react-router-dom';
+import { BsPeopleFill, BsFolderFill, BsSearch, BsChevronDown, BsChevronUp, BsEnvelope, BsGraphUp } from 'react-icons/bs';
 import SummaryApi from '../apis/index.jsx';
 
 const TeamSection = () => {
+  const navigate              = useNavigate();
+  const { employeeId }        = useParams(); // manager's employeeId from URL
   const [members,  setMembers]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [error,    setError]    = useState('');
@@ -115,7 +118,7 @@ const TeamSection = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
               <thead>
                 <tr>
-                  {['Employee', 'Email', 'Employee ID', 'Department', 'Assigned Projects'].map((h) => (
+                  {['Employee', 'Email', 'Employee ID', 'Department', 'Assigned Projects', 'Actions'].map((h) => (
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
@@ -188,12 +191,22 @@ const TeamSection = () => {
                             </span>
                           </div>
                         </td>
+
+                        {/* Actions */}
+                        <td style={tdStyle} onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => navigate(`/dashboard/manager/${employeeId}/track-employee/${m.employeeId}`)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg,#3b82f6 80%,#6366f1)', color: '#fff', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(59,130,246,0.3)', whiteSpace: 'nowrap' }}
+                          >
+                            <BsGraphUp size={13} /> Track Weekly Details
+                          </button>
+                        </td>
                       </tr>
 
                       {/* Expanded project details */}
                       {isExp && (
                         <tr style={{ background: '#f8faff' }}>
-                          <td colSpan={5} style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6' }}>
+                          <td colSpan={6} style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6' }}>
                             <strong style={{ fontSize: '13px', color: '#374151', display: 'block', marginBottom: '10px' }}>
                               Assigned Projects Detail for {m.name}:
                             </strong>

@@ -17,7 +17,7 @@ const SORT_OPTIONS = [
   { value: 'date-asc',  label: 'Start: Oldest First' },
 ];
 
-const ProjectsTable = () => {
+const ProjectsTable = ({ refreshKey = 0 }) => {
   const { employeeId } = useParams();
   const navigate = useNavigate();
   const { user } = getAuthUser();
@@ -51,7 +51,7 @@ const ProjectsTable = () => {
     }
   }, []);
 
-  useEffect(() => { fetchProjects(); }, [fetchProjects]);
+  useEffect(() => { fetchProjects(); }, [fetchProjects, refreshKey]);
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
@@ -172,7 +172,8 @@ const ProjectsTable = () => {
                 <th style={thStyle}>Description</th>
                 <th style={thStyle}>Start Date</th>
                 <th style={thStyle}>End Date</th>
-                <th style={{ ...thStyle, textAlign: 'center' }}>Total Hrs</th>
+                <th style={{ ...thStyle, textAlign: 'center' }} title="Total planned hours across all employees, all weeks">Total Project Hrs (h)</th>
+                <th style={{ ...thStyle, textAlign: 'center' }} title="Planned hours for employees in your department up to today">Dept Till Now (h)</th>
                 <th style={thStyle}>Created By</th>
                 <th style={thStyle}>Last Updated</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Actions</th>
@@ -192,16 +193,21 @@ const ProjectsTable = () => {
                     </span>
                   </td>
                   <td style={{ ...tdStyle, fontWeight: 600, color: '#0e1e3d', maxWidth: '180px' }}>{p.projectName}</td>
-                  <td style={{ ...tdStyle, color: '#6b7280', maxWidth: '200px' }}>
-                    <span title={p.projectDescription}>
-                      {p.projectDescription ? (p.projectDescription.length > 50 ? p.projectDescription.slice(0, 50) + '…' : p.projectDescription) : '—'}
+                  <td style={{ ...tdStyle, color: '#6b7280', maxWidth: '160px', overflow: 'hidden' }}>
+                    <span title={p.projectDescription} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', wordBreak: 'break-all' }}>
+                      {p.projectDescription || '—'}
                     </span>
                   </td>
                   <td style={tdStyle}>{fmt(p.startDate)}</td>
                   <td style={tdStyle}>{fmt(p.endDate)}</td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
-                    <span style={{ fontWeight: 700, color: p.totalProjectHours > 0 ? '#1d4ed8' : '#9ca3af' }}>
-                      {p.totalProjectHours > 0 ? `${p.totalProjectHours}h` : '—'}
+                    <span style={{ fontWeight: 700, color: p.totalPlannedHrs > 0 ? '#7c3aed' : '#9ca3af' }}>
+                      {p.totalPlannedHrs > 0 ? p.totalPlannedHrs : '—'}
+                    </span>
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'center' }}>
+                    <span style={{ fontWeight: 700, color: p.deptTillNowHrs > 0 ? '#1d4ed8' : '#9ca3af' }}>
+                      {p.deptTillNowHrs > 0 ? p.deptTillNowHrs : '—'}
                     </span>
                   </td>
                   <td style={{ ...tdStyle, fontSize: '12.5px' }}>

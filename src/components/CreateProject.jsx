@@ -19,7 +19,7 @@ const generateNextCode = (codes) => {
 
 // embedded=true  → rendered inside ManagerDashboard tab (no outer wrapper)
 // embedded=false → standalone protected page at /create-project
-const CreateProject = ({ embedded = false }) => {
+const CreateProject = ({ embedded = false, onSuccess }) => {
   const [formData, setFormData] = useState({
     projectCode: '', projectName: '', projectDescription: '', startDate: '', endDate: '',
   });
@@ -37,14 +37,16 @@ const CreateProject = ({ embedded = false }) => {
     try {
       const res  = await fetch(SummaryApi.getProjects.url, { method: SummaryApi.getProjects.method, credentials: 'include' });
       const data = await res.json();
+      let nextCode = 'ENT0001';
       if (data.success && Array.isArray(data.data)) {
         setTotalProjects(data.data.length);
-        setSuggestedCode(generateNextCode(data.data.map((p) => p.projectCode)));
-      } else {
-        setSuggestedCode('ENT0001');
+        nextCode = generateNextCode(data.data.map((p) => p.projectCode));
       }
+      setSuggestedCode(nextCode);
+      setFormData((prev) => prev.projectCode ? prev : { ...prev, projectCode: nextCode });
     } catch {
       setSuggestedCode('ENT0001');
+      setFormData((prev) => prev.projectCode ? prev : { ...prev, projectCode: 'ENT0001' });
     } finally {
       setFetchingCode(false);
     }
@@ -112,6 +114,7 @@ const CreateProject = ({ embedded = false }) => {
         setFormData({ projectCode: '', projectName: '', projectDescription: '', startDate: '', endDate: '' });
         setErrors({});
         await fetchNextCode();
+        if (onSuccess) onSuccess(data.project);
         setTimeout(() => setSuccessMsg(''), 5000);
       } else {
         setApiError(data.message || 'Failed to create project. Please try again.');

@@ -1,47 +1,72 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import SummaryApi from '../apis/index.jsx';
 
 const EmployeeHoursHistory = () => {
-  const [projects, setProjects]     = useState([]);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [logs, setLogs]             = useState([]);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState('');
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchAll = async () => {
+      setLoading(true); setError('');
       try {
-        const res  = await fetch(SummaryApi.getEmployeeProjects.url, { credentials: 'include' });
-        const data = await res.json();
-        if (data.success) {
-          setProjects(data.data);
-          if (data.data.length > 0) setSelectedProject(data.data[0].project._id);
+        // 1. Get all assigned projects
+        const projRes  = await fetch(SummaryApi.getEmployeeProjects.url, { credentials: 'include' });
+        const projData = await projRes.json();
+        if (!projData.success || !Array.isArray(projData.data)) {
+          setWeeklyData([]); return;
         }
-      } catch { /* silent */ }
+
+        // 2. Fetch work logs for every project in parallel
+        const allLogs = [];
+        await Promise.all(
+          projData.data.map(async (p) => {
+            try {
+              const logRes  = await fetch(`${SummaryApi.getWorkLogs.url}/${p.project._id}`, { credentials: 'include' });
+              const logData = await logRes.json();
+              if (logData.success && Array.isArray(logData.data)) {
+                logData.data.forEach((l) => allLogs.push(l));
+              }
+            } catch { /* skip failed project */ }
+          })
+        );
+
+        // 3. Aggregate by year+week
+        const weekMap = {};
+        allLogs.forEach((l) => {
+          const key = `${l.year}-${String(l.weekNumber).padStart(2, '0')}`;
+          if (!weekMap[key]) {
+            weekMap[key] = {
+              year: l.year, weekNumber: l.weekNumber,
+              planned: 0, worked: 0, training: 0, leave: 0,
+              submittedCount: 0, totalCount: 0,
+            };
+          }
+          weekMap[key].planned  += l.plannedHours  || 0;
+          weekMap[key].worked   += l.workedHours   || 0;
+          weekMap[key].training += l.trainingHours || 0;
+          weekMap[key].leave    += l.leaveHours    || 0;
+          weekMap[key].totalCount += 1;
+          if (l.status === 'submitted') weekMap[key].submittedCount += 1;
+        });
+
+        // Sort newest first
+        const sorted = Object.values(weekMap).sort((a, b) =>
+          a.year !== b.year ? b.year - a.year : b.weekNumber - a.weekNumber
+        );
+        setWeeklyData(sorted);
+      } catch { setError('Network error. Please try again.'); }
+      finally { setLoading(false); }
     };
-    fetchProjects();
+    fetchAll();
   }, []);
 
-  const fetchLogs = useCallback(async () => {
-    if (!selectedProject) return;
-    setLoading(true); setError('');
-    try {
-      const res  = await fetch(`${SummaryApi.getWorkLogs.url}/${selectedProject}`, { credentials: 'include' });
-      const data = await res.json();
-      if (data.success) setLogs(data.data);
-      else setError(data.message || 'Failed to load');
-    } catch { setError('Network error'); }
-    finally { setLoading(false); }
-  }, [selectedProject]);
-
-  useEffect(() => { fetchLogs(); }, [fetchLogs]);
-
-  const totals = logs.reduce(
-    (acc, l) => ({
-      planned:  acc.planned  + (l.plannedHours  || 0),
-      worked:   acc.worked   + (l.workedHours   || 0),
-      training: acc.training + (l.trainingHours || 0),
-      leave:    acc.leave    + (l.leaveHours    || 0),
+  const totals = weeklyData.reduce(
+    (acc, w) => ({
+      planned:  acc.planned  + w.planned,
+      worked:   acc.worked   + w.worked,
+      training: acc.training + w.training,
+      leave:    acc.leave    + w.leave,
     }),
     { planned: 0, worked: 0, training: 0, leave: 0 }
   );
@@ -51,18 +76,14 @@ const EmployeeHoursHistory = () => {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0e1e3d' }}>Your Weekly Hours</h3>
-        <select
-          value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
-          style={{ padding: '8px 14px', borderRadius: '8px', border: '1.5px solid #e5e7eb', fontSize: '13px', outline: 'none', cursor: 'pointer', maxWidth: '300px' }}
-        >
-          {projects.map((p) => <option key={p.project._id} value={p.project._id}>{p.project.projectCode} — {p.project.projectName}</option>)}
-        </select>
+      <div style={{ marginBottom: '20px' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: 700, color: '#0e1e3d' }}>Your Weekly Hours</h3>
+        <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af' }}>
+          Aggregated across all assigned projects per week
+        </p>
       </div>
 
-      {logs.length > 0 && (
+      {weeklyData.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
           {[
             { label: 'Total Planned',  value: `${totals.planned}h`,  color: '#1d4ed8', bg: '#eff6ff' },
@@ -84,40 +105,46 @@ const EmployeeHoursHistory = () => {
         </div>
       ) : error ? (
         <div style={{ color: '#dc2626', fontSize: '13px', padding: '16px', textAlign: 'center' }}>{error}</div>
-      ) : logs.length === 0 ? (
+      ) : weeklyData.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af', fontSize: '14px' }}>No logs submitted yet.</div>
       ) : (
         <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid #f3f4f6' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '680px' }}>
             <thead>
               <tr>
-                <th style={thStyle}>Year/Week</th>
-                <th style={thStyle}>Planned</th>
-                <th style={thStyle}>Worked</th>
-                <th style={thStyle}>Training</th>
-                <th style={thStyle}>Leave</th>
-                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Year / Week</th>
+                <th style={thStyle}>Total Planned (h)</th>
+                <th style={thStyle}>Total Worked (h)</th>
+                <th style={thStyle}>Training (h)</th>
+                <th style={thStyle}>Leave (h)</th>
                 <th style={thStyle}>Submitted</th>
               </tr>
             </thead>
             <tbody>
-              {logs.map((l, i) => (
-                <tr key={l._id} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
-                  <td style={{ ...tdStyle, fontWeight: 700, color: '#0e1e3d' }}>Wk {l.weekNumber}/{l.year}</td>
-                  <td style={{ ...tdStyle, color: '#1d4ed8', fontWeight: 700 }}>{l.plannedHours || 0}h</td>
-                  <td style={{ ...tdStyle, color: '#16a34a', fontWeight: 700 }}>{l.workedHours}h</td>
-                  <td style={{ ...tdStyle, color: '#d97706' }}>{l.trainingHours}h</td>
-                  <td style={{ ...tdStyle, color: '#9333ea' }}>{l.leaveHours}h</td>
-                  <td style={tdStyle}>
-                    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600, background: l.status === 'submitted' ? '#dcfce7' : '#f3f4f6', color: l.status === 'submitted' ? '#16a34a' : '#9ca3af' }}>
-                      {l.status === 'submitted' ? '✓ Submitted' : 'Draft'}
-                    </span>
-                  </td>
-                  <td style={{ ...tdStyle, fontSize: '12px', color: '#9ca3af' }}>
-                    {l.submittedAt ? new Date(l.submittedAt).toLocaleDateString() : '—'}
-                  </td>
-                </tr>
-              ))}
+              {weeklyData.map((w, i) => {
+                const allDone = w.submittedCount === w.totalCount && w.totalCount > 0;
+                const partial  = w.submittedCount > 0 && w.submittedCount < w.totalCount;
+                return (
+                  <tr key={`${w.year}-${w.weekNumber}`} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+                    <td style={{ ...tdStyle, fontWeight: 700, color: '#0e1e3d' }}>
+                      Wk {w.weekNumber}/{w.year}
+                    </td>
+                    <td style={{ ...tdStyle, color: '#1d4ed8', fontWeight: 700 }}>{w.planned}h</td>
+                    <td style={{ ...tdStyle, color: '#16a34a', fontWeight: 700 }}>{w.worked}h</td>
+                    <td style={{ ...tdStyle, color: '#d97706' }}>{w.training}h</td>
+                    <td style={{ ...tdStyle, color: '#9333ea' }}>{w.leave}h</td>
+                    <td style={tdStyle}>
+                      <span style={{
+                        padding: '3px 10px', borderRadius: '20px', fontSize: '11.5px', fontWeight: 600,
+                        background: allDone ? '#dcfce7' : partial ? '#fffbeb' : '#f3f4f6',
+                        color:      allDone ? '#16a34a' : partial ? '#d97706' : '#9ca3af',
+                      }}>
+                        {allDone ? '✓ All Submitted' : partial ? `${w.submittedCount}/${w.totalCount} Submitted` : 'Pending'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

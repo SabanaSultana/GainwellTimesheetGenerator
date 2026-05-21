@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BsTable, BsFolderFill, BsArrowClockwise, BsXCircle } from 'react-icons/bs';
+import { BsTable, BsFolderFill, BsArrowClockwise, BsXCircle, BsPencilSquare } from 'react-icons/bs';
 import SummaryApi from '../apis/index.jsx';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -11,14 +11,13 @@ const MONTH_PALETTE = [
   { bg: '#065f46', text: '#fff', subBg: '#d1fae5', subText: '#065f46' },
 ];
 
-function getDateOfISOWeek(year, week) {
-  const jan4 = new Date(year, 0, 4);
-  const startDay = jan4.getDay() || 7;
-  const firstMonday = new Date(jan4);
-  firstMonday.setDate(jan4.getDate() - startDay + 1);
-  const result = new Date(firstMonday);
-  result.setDate(firstMonday.getDate() + (week - 1) * 7);
-  return result;
+function getWeekMonday(fyYear, weekNum) {
+  const apr1 = new Date(fyYear, 3, 1);
+  const apr1Day = apr1.getDay() || 7;
+  const fyStart = new Date(fyYear, 3, 2 - apr1Day);
+  const monday = new Date(fyStart);
+  monday.setDate(fyStart.getDate() + (weekNum - 1) * 7);
+  return monday;
 }
 
 function buildGridData(plans) {
@@ -36,7 +35,7 @@ function buildGridData(plans) {
   const monthGroups = [];
   let curGroup = null;
   allWeeks.forEach((w) => {
-    const monday = getDateOfISOWeek(w.year, w.weekNumber);
+    const monday = getWeekMonday(w.year, w.weekNumber);
     const mIdx = monday.getMonth();
     const mYear = monday.getFullYear();
     const key = `${mYear}-${mIdx}`;
@@ -53,34 +52,113 @@ function buildGridData(plans) {
     if (!empMap[empId]) empMap[empId] = { id: empId, name: p.employee?.name || 'Unknown', employeeId: p.employeeId || '' };
   });
 
-  const planMap = {}, actualMap = {};
+  const planMap = {}, actualMap = {}, leaveMap = {}, trainingMap = {};
   plans.forEach((p) => {
     const empId = String(p.employee?._id || p.employee);
     const wKey = `${p.year}-${p.weekNumber}`;
     const k = `${empId}::${wKey}`;
     planMap[k] = p.plannedHours || 0;
-    if (p.status != null) actualMap[k] = p.workedHours || 0;
+    if (p.status != null) {
+      actualMap[k]   = p.workedHours   || 0;
+      leaveMap[k]    = p.leaveHours    || 0;
+      trainingMap[k] = p.trainingHours || 0;
+    }
   });
 
   const employees = Object.values(empMap).sort((a, b) => a.name.localeCompare(b.name));
 
   const empTotals = {};
   employees.forEach((emp) => {
-    let planTotal = 0, actualTotal = 0;
+    let planTotal = 0, actualTotal = 0, leaveTotal = 0, trainingTotal = 0;
     allWeeks.forEach((w) => {
       const k = `${emp.id}::${w.year}-${w.weekNumber}`;
-      planTotal   += planMap[k] || 0;
-      actualTotal += actualMap[k] != null ? actualMap[k] : 0;
+      planTotal     += planMap[k]     || 0;
+      actualTotal   += actualMap[k]   != null ? actualMap[k]   : 0;
+      leaveTotal    += leaveMap[k]    != null ? leaveMap[k]    : 0;
+      trainingTotal += trainingMap[k] != null ? trainingMap[k] : 0;
     });
-    empTotals[emp.id] = { plan: planTotal, actual: actualTotal };
+    empTotals[emp.id] = { plan: planTotal, actual: actualTotal, leave: leaveTotal, training: trainingTotal };
   });
 
-  return { allWeeks, monthGroups, employees, planMap, actualMap, weekMap, empTotals };
+  return { allWeeks, monthGroups, employees, planMap, actualMap, leaveMap, trainingMap, weekMap, empTotals };
 }
+
+// ── Edit Modal ────────────────────────────────────────────────────────────────
+
+const TYPE_CONFIG = {
+  actual:   { label: 'Actual',   color: '#d97706', bg: '#fffbeb' },
+  leave:    { label: 'Leave',    color: '#9333ea', bg: '#faf5ff' },
+  training: { label: 'Training', color: '#ea580c', bg: '#fff7ed' },
+};
+
+const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, saving, saveError, onSave, onClose }) => {
+  const cfg = TYPE_CONFIG[modal.type];
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: '14px', padding: '28px 32px', width: '380px', boxShadow: '0 24px 72px rgba(0,0,0,0.22)', border: `2px solid ${cfg.bg}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+          <BsPencilSquare size={18} color={cfg.color} />
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0e1e3d' }}>Edit {cfg.label} Hours</h3>
+        </div>
+        <p style={{ margin: '0 0 20px', fontSize: '13px', color: '#6b7280' }}>
+          <strong>{modal.empName}</strong> · Week {modal.weekNumber} ({modal.year})
+        </p>
+
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+            {cfg.label} Hours
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.5"
+            value={editVal}
+            onChange={(e) => setEditVal(e.target.value)}
+            autoFocus
+            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: `1.5px solid ${cfg.bg}`, outline: 'none', fontSize: '15px', fontWeight: 700, color: cfg.color, boxSizing: 'border-box', background: cfg.bg }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '18px' }}>
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+            Justification <span style={{ color: '#dc2626' }}>*</span>
+          </label>
+          <textarea
+            value={editJustify}
+            onChange={(e) => setEditJustify(e.target.value)}
+            placeholder="Reason for this update…"
+            rows={3}
+            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: '1.5px solid #e5e7eb', outline: 'none', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+          />
+        </div>
+
+        {saveError && (
+          <p style={{ margin: '0 0 14px', fontSize: '13px', color: '#dc2626', background: '#fef2f2', padding: '8px 12px', borderRadius: '6px', border: '1px solid #fca5a5' }}>{saveError}</p>
+        )}
+
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <button onClick={onClose} disabled={saving} style={{ padding: '9px 20px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+            Cancel
+          </button>
+          <button onClick={onSave} disabled={saving} style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: cfg.color, color: '#fff', fontSize: '13px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 
-const WeeklyGrid = ({ plans, project }) => {
+const WeeklyGrid = ({ plans, project, onRefresh }) => {
+  const [editModal,    setEditModal]    = useState(null);
+  const [editVal,      setEditVal]      = useState('');
+  const [editJustify,  setEditJustify]  = useState('');
+  const [saving,       setSaving]       = useState(false);
+  const [saveError,    setSaveError]    = useState('');
+  const [localOvr,     setLocalOvr]     = useState({});
+
   if (!plans || plans.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '48px 32px', background: '#f9fafb', borderRadius: '12px', border: '1.5px dashed #e5e7eb' }}>
@@ -91,7 +169,63 @@ const WeeklyGrid = ({ plans, project }) => {
     );
   }
 
-  const { allWeeks, monthGroups, employees, planMap, actualMap, weekMap, empTotals } = buildGridData(plans);
+  const { allWeeks, monthGroups, employees, planMap, actualMap, leaveMap, trainingMap, weekMap, empTotals } = buildGridData(plans);
+
+  const getDisplayVal = (type, k) => {
+    if (localOvr[k]?.[type] !== undefined) return localOvr[k][type];
+    const map = type === 'actual' ? actualMap : type === 'leave' ? leaveMap : trainingMap;
+    return map[k];
+  };
+
+  const openEdit = (empId, empName, year, weekNumber, type) => {
+    const k   = `${empId}::${year}-${weekNumber}`;
+    const cur = getDisplayVal(type, k);
+    setEditModal({ empId, empName, year, weekNumber, type });
+    setEditVal(cur != null ? String(cur) : '0');
+    setEditJustify('');
+    setSaveError('');
+  };
+
+  const handleSave = async () => {
+    if (!editJustify.trim()) { setSaveError('Please provide a justification.'); return; }
+    const newVal = Math.max(0, Number(editVal) || 0);
+    const k = `${editModal.empId}::${editModal.year}-${editModal.weekNumber}`;
+    const curActual   = getDisplayVal('actual',   k) ?? 0;
+    const curLeave    = getDisplayVal('leave',    k) ?? 0;
+    const curTraining = getDisplayVal('training', k) ?? 0;
+
+    setSaving(true); setSaveError('');
+    try {
+      const res = await fetch(SummaryApi.managerUpdateWorkLog.url, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId:      project?._id,
+          employeeUserId: editModal.empId,
+          year:           editModal.year,
+          weekNumber:     editModal.weekNumber,
+          workedHours:    editModal.type === 'actual'   ? newVal : curActual,
+          leaveHours:     editModal.type === 'leave'    ? newVal : curLeave,
+          trainingHours:  editModal.type === 'training' ? newVal : curTraining,
+          justification:  editJustify.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) { setSaveError(data.message || 'Save failed'); setSaving(false); return; }
+
+      setLocalOvr((prev) => ({
+        ...prev,
+        [k]: {
+          actual:   editModal.type === 'actual'   ? newVal : curActual,
+          leave:    editModal.type === 'leave'    ? newVal : curLeave,
+          training: editModal.type === 'training' ? newVal : curTraining,
+        },
+      }));
+      setEditModal(null);
+      if (onRefresh) onRefresh();
+    } catch { setSaveError('Network error'); }
+    finally { setSaving(false); }
+  };
 
   const CW_NAME = 172, CW_TYPE = 72, CW_TOTAL = 62, CW_WEEK = 56;
   const L_NAME = 0, L_TYPE = CW_NAME, L_TOTAL = CW_NAME + CW_TYPE;
@@ -106,121 +240,205 @@ const WeeklyGrid = ({ plans, project }) => {
     background: bg, borderRight: '2px solid #d1d5db', ...extra,
   });
 
+  const editableCell = (type, empId, empName, w, val, rowBg) => {
+    const cfg     = TYPE_CONFIG[type];
+    const hasVal  = val != null;
+    const planned = planMap[`${empId}::${w.year}-${w.weekNumber}`] || 0;
+    const isOver  = type === 'actual' && hasVal && planned > 0 && val > planned;
+    const bg      = hasVal ? (isOver ? '#fef2f2' : cfg.bg) : rowBg;
+    const color   = hasVal ? (isOver ? '#dc2626' : cfg.color) : '#e2e8f0';
+
+    return (
+      <td
+        key={`${w.year}-${w.weekNumber}`}
+        title="Click to edit"
+        onClick={() => openEdit(empId, empName, w.year, w.weekNumber, type)}
+        style={{
+          ...cellBase, background: bg, color, fontWeight: hasVal ? 700 : 400,
+          fontSize: '12.5px', height: '30px', borderLeft: '1px solid #e5e7eb',
+          cursor: 'pointer', transition: 'filter 0.15s',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(0.93)'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+      >
+        {hasVal ? (
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+            {val}
+            <BsPencilSquare size={9} style={{ opacity: 0.5, flexShrink: 0 }} />
+          </span>
+        ) : (
+          <span style={{ color: '#d1d5db', fontSize: '11px' }}>—</span>
+        )}
+      </td>
+    );
+  };
+
   return (
-    <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.07)' }}>
-      <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: `${L_TOTAL + CW_TOTAL + allWeeks.length * CW_WEEK}px` }}>
-        <colgroup>
-          <col style={{ width: CW_NAME }} />
-          <col style={{ width: CW_TYPE }} />
-          <col style={{ width: CW_TOTAL }} />
-          {allWeeks.map((w) => <col key={`${w.year}-${w.weekNumber}`} style={{ width: CW_WEEK }} />)}
-        </colgroup>
+    <>
+      {editModal && (
+        <EditModal
+          modal={editModal}
+          editVal={editVal}       setEditVal={setEditVal}
+          editJustify={editJustify} setEditJustify={setEditJustify}
+          saving={saving} saveError={saveError}
+          onSave={handleSave}
+          onClose={() => setEditModal(null)}
+        />
+      )}
 
-        <thead>
-          {/* Row 1: project banner + month groups */}
-          <tr>
-            <th colSpan={3} style={{ ...cellBase, position: 'sticky', left: 0, zIndex: 5, background: '#0f172a', color: '#fff', textAlign: 'left', padding: '0 14px', height: '40px', borderRight: '2px solid rgba(255,255,255,0.15)', fontWeight: 700 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <BsFolderFill size={13} color="#60a5fa" />
-                <span style={{ fontSize: '12.5px' }}>{project?.projectCode}</span>
-                <span style={{ fontWeight: 400, fontSize: '11.5px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project?.projectName}</span>
-              </div>
-            </th>
-            {monthGroups.map((mg) => {
-              const c = MONTH_PALETTE[mg.colorIdx];
+      <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.07)' }}>
+        <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: `${L_TOTAL + CW_TOTAL + allWeeks.length * CW_WEEK}px` }}>
+          <colgroup>
+            <col style={{ width: CW_NAME }} />
+            <col style={{ width: CW_TYPE }} />
+            <col style={{ width: CW_TOTAL }} />
+            {allWeeks.map((w) => <col key={`${w.year}-${w.weekNumber}`} style={{ width: CW_WEEK }} />)}
+          </colgroup>
+
+          <thead>
+            {/* Row 1: project banner + month groups */}
+            <tr>
+              <th colSpan={3} style={{ ...cellBase, position: 'sticky', left: 0, zIndex: 5, background: '#0f172a', color: '#fff', textAlign: 'left', padding: '0 14px', height: '40px', borderRight: '2px solid rgba(255,255,255,0.15)', fontWeight: 700 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <BsFolderFill size={13} color="#60a5fa" />
+                  <span style={{ fontSize: '12.5px' }}>{project?.projectCode}</span>
+                  <span style={{ fontWeight: 400, fontSize: '11.5px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project?.projectName}</span>
+                </div>
+              </th>
+              {monthGroups.map((mg) => {
+                const c = MONTH_PALETTE[mg.colorIdx];
+                return (
+                  <th key={mg.key} colSpan={mg.weeks.length} style={{ ...cellBase, background: c.bg, color: c.text, fontWeight: 700, fontSize: '12px', height: '40px', letterSpacing: '0.5px', borderLeft: '2px solid rgba(255,255,255,0.25)' }}>
+                    {mg.label} {mg.year}
+                  </th>
+                );
+              })}
+            </tr>
+
+            {/* Row 2: column labels + week numbers */}
+            <tr>
+              <th style={{ ...sticky(L_NAME, '#f1f5f9', { textAlign: 'left', padding: '0 12px', zIndex: 4 }), fontSize: '11px', fontWeight: 700, color: '#64748b', height: '30px' }}>Employee</th>
+              <th style={{ ...sticky(L_TYPE, '#f1f5f9', { zIndex: 3 }), fontSize: '11px', fontWeight: 700, color: '#64748b', height: '30px' }}>Type</th>
+              <th style={{ ...sticky(L_TOTAL, '#f1f5f9', { zIndex: 3 }), fontSize: '11px', fontWeight: 700, color: '#64748b', height: '30px' }}>Total</th>
+              {allWeeks.map((w) => {
+                const monday = getWeekMonday(w.year, w.weekNumber);
+                const mKey = `${monday.getFullYear()}-${monday.getMonth()}`;
+                const mg = monthGroups.find((g) => g.key === mKey);
+                const c = MONTH_PALETTE[mg?.colorIdx ?? 0];
+                return (
+                  <th key={`${w.year}-${w.weekNumber}`} style={{ ...cellBase, background: c.subBg, color: c.subText, fontWeight: 700, fontSize: '11.5px', height: '30px', borderLeft: '1px solid #d1d5db' }}>
+                    W{w.weekNumber}
+                  </th>
+                );
+              })}
+            </tr>
+
+            {/* Row 3: weekly hours cap */}
+            <tr>
+              <td colSpan={3} style={{ ...cellBase, position: 'sticky', left: 0, zIndex: 4, background: '#f0f9ff', borderRight: '2px solid #bae6fd', textAlign: 'left', padding: '0 12px', fontSize: '10.5px', fontWeight: 600, color: '#0284c7', height: '26px' }}>
+                Wk Hours Cap
+              </td>
+              {allWeeks.map((w) => {
+                const total = weekMap[`${w.year}-${w.weekNumber}`]?.totalWeeklyHours || 0;
+                return (
+                  <td key={`${w.year}-${w.weekNumber}`} style={{ ...cellBase, background: '#f0f9ff', color: '#0284c7', fontWeight: 700, fontSize: '12px', height: '26px', borderLeft: '1px solid #e0f2fe' }}>
+                    {total > 0 ? total : <span style={{ color: '#cbd5e1' }}>—</span>}
+                  </td>
+                );
+              })}
+            </tr>
+          </thead>
+
+          <tbody>
+            {employees.map((emp, ei) => {
+              const rowBg = ei % 2 === 0 ? '#ffffff' : '#f8faff';
+
+              // Totals with local overrides factored in
+              let ovrActual = 0, ovrLeave = 0, ovrTraining = 0;
+              allWeeks.forEach((w) => {
+                const k = `${emp.id}::${w.year}-${w.weekNumber}`;
+                ovrActual   += getDisplayVal('actual',   k) ?? 0;
+                ovrLeave    += getDisplayVal('leave',    k) ?? 0;
+                ovrTraining += getDisplayVal('training', k) ?? 0;
+              });
+
               return (
-                <th key={mg.key} colSpan={mg.weeks.length} style={{ ...cellBase, background: c.bg, color: c.text, fontWeight: 700, fontSize: '12px', height: '40px', letterSpacing: '0.5px', borderLeft: '2px solid rgba(255,255,255,0.25)' }}>
-                  {mg.label} {mg.year}
-                </th>
+                <React.Fragment key={emp.id}>
+                  {/* Plan row (read-only) */}
+                  <tr>
+                    <td style={{ ...sticky(L_NAME, rowBg, { textAlign: 'left', padding: '4px 12px', borderBottom: 'none', zIndex: 3 }), height: '34px' }}>
+                      <div style={{ fontWeight: 600, fontSize: '12.5px', color: '#0e1e3d', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.name}</div>
+                      <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: 1 }}>{emp.employeeId}</div>
+                    </td>
+                    <td style={{ ...sticky(L_TYPE, '#f0fdf4', { zIndex: 3 }), color: '#16a34a', fontWeight: 700, fontSize: '11.5px', height: '34px' }}>Plan</td>
+                    <td style={{ ...sticky(L_TOTAL, '#f0fdf4', { zIndex: 3 }), color: '#15803d', fontWeight: 700, fontSize: '12.5px', height: '34px' }}>
+                      {empTotals[emp.id].plan > 0 ? `${empTotals[emp.id].plan}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
+                    </td>
+                    {allWeeks.map((w) => {
+                      const k   = `${emp.id}::${w.year}-${w.weekNumber}`;
+                      const val = planMap[k];
+                      return (
+                        <td key={`${w.year}-${w.weekNumber}`} style={{ ...cellBase, background: val > 0 ? '#f0fdf4' : rowBg, color: val > 0 ? '#15803d' : '#e2e8f0', fontWeight: val > 0 ? 700 : 400, fontSize: '12.5px', height: '34px', borderLeft: '1px solid #e5e7eb' }}>
+                          {val > 0 ? val : ''}
+                        </td>
+                      );
+                    })}
+                  </tr>
+
+                  {/* Actual row (editable) */}
+                  <tr>
+                    <td style={{ ...sticky(L_NAME, rowBg, { borderTop: 'none', zIndex: 3 }), height: '30px' }} />
+                    <td style={{ ...sticky(L_TYPE, '#fffbeb', { zIndex: 3 }), color: '#d97706', fontWeight: 700, fontSize: '11.5px', height: '30px' }}>
+                      <span title="Click cells to edit">Actual <BsPencilSquare size={9} style={{ opacity: 0.6 }} /></span>
+                    </td>
+                    <td style={{ ...sticky(L_TOTAL, '#fffbeb', { zIndex: 3 }), color: '#b45309', fontWeight: 700, fontSize: '12.5px', height: '30px' }}>
+                      {ovrActual > 0 ? `${ovrActual}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
+                    </td>
+                    {allWeeks.map((w) => {
+                      const k   = `${emp.id}::${w.year}-${w.weekNumber}`;
+                      const val = getDisplayVal('actual', k);
+                      return editableCell('actual', emp.id, emp.name, w, val, rowBg);
+                    })}
+                  </tr>
+
+                  {/* Leave row (editable) */}
+                  <tr>
+                    <td style={{ ...sticky(L_NAME, rowBg, { borderTop: 'none', zIndex: 3 }), height: '28px' }} />
+                    <td style={{ ...sticky(L_TYPE, '#faf5ff', { zIndex: 3 }), color: '#9333ea', fontWeight: 700, fontSize: '11.5px', height: '28px' }}>
+                      <span title="Click cells to edit">Leave <BsPencilSquare size={9} style={{ opacity: 0.6 }} /></span>
+                    </td>
+                    <td style={{ ...sticky(L_TOTAL, '#faf5ff', { zIndex: 3 }), color: '#7e22ce', fontWeight: 700, fontSize: '12.5px', height: '28px' }}>
+                      {ovrLeave > 0 ? `${ovrLeave}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
+                    </td>
+                    {allWeeks.map((w) => {
+                      const k   = `${emp.id}::${w.year}-${w.weekNumber}`;
+                      const val = getDisplayVal('leave', k);
+                      return editableCell('leave', emp.id, emp.name, w, val, rowBg);
+                    })}
+                  </tr>
+
+                  {/* Training row (editable) */}
+                  <tr style={{ borderBottom: `2px solid ${ei % 2 === 0 ? '#e5e7eb' : '#dde7ff'}` }}>
+                    <td style={{ ...sticky(L_NAME, rowBg, { borderTop: 'none', zIndex: 3 }), height: '28px' }} />
+                    <td style={{ ...sticky(L_TYPE, '#fff7ed', { zIndex: 3 }), color: '#ea580c', fontWeight: 700, fontSize: '11.5px', height: '28px' }}>
+                      <span title="Click cells to edit">Train <BsPencilSquare size={9} style={{ opacity: 0.6 }} /></span>
+                    </td>
+                    <td style={{ ...sticky(L_TOTAL, '#fff7ed', { zIndex: 3 }), color: '#c2410c', fontWeight: 700, fontSize: '12.5px', height: '28px' }}>
+                      {ovrTraining > 0 ? `${ovrTraining}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
+                    </td>
+                    {allWeeks.map((w) => {
+                      const k   = `${emp.id}::${w.year}-${w.weekNumber}`;
+                      const val = getDisplayVal('training', k);
+                      return editableCell('training', emp.id, emp.name, w, val, rowBg);
+                    })}
+                  </tr>
+                </React.Fragment>
               );
             })}
-          </tr>
-
-          {/* Row 2: column labels + week numbers */}
-          <tr>
-            <th style={{ ...sticky(L_NAME, '#f1f5f9', { textAlign: 'left', padding: '0 12px', zIndex: 4 }), fontSize: '11px', fontWeight: 700, color: '#64748b', height: '30px' }}>Employee</th>
-            <th style={{ ...sticky(L_TYPE, '#f1f5f9', { zIndex: 3 }), fontSize: '11px', fontWeight: 700, color: '#64748b', height: '30px' }}>Type</th>
-            <th style={{ ...sticky(L_TOTAL, '#f1f5f9', { zIndex: 3 }), fontSize: '11px', fontWeight: 700, color: '#64748b', height: '30px' }}>Total</th>
-            {allWeeks.map((w) => {
-              const monday = getDateOfISOWeek(w.year, w.weekNumber);
-              const mKey = `${monday.getFullYear()}-${monday.getMonth()}`;
-              const mg = monthGroups.find((g) => g.key === mKey);
-              const c = MONTH_PALETTE[mg?.colorIdx ?? 0];
-              return (
-                <th key={`${w.year}-${w.weekNumber}`} style={{ ...cellBase, background: c.subBg, color: c.subText, fontWeight: 700, fontSize: '11.5px', height: '30px', borderLeft: '1px solid #d1d5db' }}>
-                  W{w.weekNumber}
-                </th>
-              );
-            })}
-          </tr>
-
-          {/* Row 3: weekly hours cap */}
-          <tr>
-            <td colSpan={3} style={{ ...cellBase, position: 'sticky', left: 0, zIndex: 4, background: '#f0f9ff', borderRight: '2px solid #bae6fd', textAlign: 'left', padding: '0 12px', fontSize: '10.5px', fontWeight: 600, color: '#0284c7', height: '26px' }}>
-              Wk Hours Cap
-            </td>
-            {allWeeks.map((w) => {
-              const total = weekMap[`${w.year}-${w.weekNumber}`]?.totalWeeklyHours || 0;
-              return (
-                <td key={`${w.year}-${w.weekNumber}`} style={{ ...cellBase, background: '#f0f9ff', color: '#0284c7', fontWeight: 700, fontSize: '12px', height: '26px', borderLeft: '1px solid #e0f2fe' }}>
-                  {total > 0 ? total : <span style={{ color: '#cbd5e1' }}>—</span>}
-                </td>
-              );
-            })}
-          </tr>
-        </thead>
-
-        <tbody>
-          {employees.map((emp, ei) => {
-            const rowBg = ei % 2 === 0 ? '#ffffff' : '#f8faff';
-            return (
-              <React.Fragment key={emp.id}>
-                {/* Plan row */}
-                <tr>
-                  <td style={{ ...sticky(L_NAME, rowBg, { textAlign: 'left', padding: '4px 12px', borderBottom: 'none', zIndex: 3 }), height: '34px' }}>
-                    <div style={{ fontWeight: 600, fontSize: '12.5px', color: '#0e1e3d', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis' }}>{emp.name}</div>
-                    <div style={{ fontSize: '10px', color: '#94a3b8', lineHeight: 1 }}>{emp.employeeId}</div>
-                  </td>
-                  <td style={{ ...sticky(L_TYPE, '#f0fdf4', { zIndex: 3 }), color: '#16a34a', fontWeight: 700, fontSize: '11.5px', height: '34px' }}>Plan</td>
-                  <td style={{ ...sticky(L_TOTAL, '#f0fdf4', { zIndex: 3 }), color: '#15803d', fontWeight: 700, fontSize: '12.5px', height: '34px' }}>
-                    {empTotals[emp.id].plan > 0 ? `${empTotals[emp.id].plan}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
-                  </td>
-                  {allWeeks.map((w) => {
-                    const k = `${emp.id}::${w.year}-${w.weekNumber}`;
-                    const val = planMap[k];
-                    return (
-                      <td key={`${w.year}-${w.weekNumber}`} style={{ ...cellBase, background: val > 0 ? '#f0fdf4' : rowBg, color: val > 0 ? '#15803d' : '#e2e8f0', fontWeight: val > 0 ? 700 : 400, fontSize: '12.5px', height: '34px', borderLeft: '1px solid #e5e7eb' }}>
-                        {val > 0 ? val : ''}
-                      </td>
-                    );
-                  })}
-                </tr>
-
-                {/* Actual row */}
-                <tr style={{ borderBottom: `2px solid ${ei % 2 === 0 ? '#e5e7eb' : '#dde7ff'}` }}>
-                  <td style={{ ...sticky(L_NAME, rowBg, { borderTop: 'none', zIndex: 3 }), height: '30px' }} />
-                  <td style={{ ...sticky(L_TYPE, '#fffbeb', { zIndex: 3 }), color: '#d97706', fontWeight: 700, fontSize: '11.5px', height: '30px' }}>Actual</td>
-                  <td style={{ ...sticky(L_TOTAL, '#fffbeb', { zIndex: 3 }), color: '#b45309', fontWeight: 700, fontSize: '12.5px', height: '30px' }}>
-                    {empTotals[emp.id].actual > 0 ? `${empTotals[emp.id].actual}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
-                  </td>
-                  {allWeeks.map((w) => {
-                    const k = `${emp.id}::${w.year}-${w.weekNumber}`;
-                    const val = actualMap[k];
-                    const planned = planMap[k] || 0;
-                    const isOver = val != null && planned > 0 && val > planned;
-                    return (
-                      <td key={`${w.year}-${w.weekNumber}`} style={{ ...cellBase, background: val != null ? (isOver ? '#fef2f2' : '#fffbeb') : rowBg, color: val != null ? (isOver ? '#dc2626' : '#b45309') : '#e2e8f0', fontWeight: val != null ? 700 : 400, fontSize: '12.5px', height: '30px', borderLeft: '1px solid #e5e7eb' }}>
-                        {val != null ? val : ''}
-                      </td>
-                    );
-                  })}
-                </tr>
-              </React.Fragment>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 };
 
@@ -235,14 +453,12 @@ const PlanGridSection = () => {
 
   const selectedProject = projects.find((p) => p._id === selectedProjectId);
 
-  // Fetch projects on mount
   useEffect(() => {
     fetch(SummaryApi.getProjects.url, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => { if (data.success) setProjects(data.data); });
   }, []);
 
-  // Fetch plans when project changes
   const fetchGrid = useCallback(async () => {
     if (!selectedProjectId) { setGridPlans([]); return; }
     setLoading(true); setError('');
@@ -280,7 +496,7 @@ const PlanGridSection = () => {
           <div>
             <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#0e1e3d' }}>Plan vs Actual Overview</h3>
             <p style={{ margin: '3px 0 0', fontSize: '14px', color: '#6b7280' }}>
-              Project-wise view of planned hours against actual hours submitted by employees
+              Click any Actual / Leave / Training cell to edit it directly
             </p>
           </div>
         </div>
@@ -348,11 +564,10 @@ const PlanGridSection = () => {
         </div>
       ) : (
         <>
-          {/* Grid heading */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <BsTable size={15} color="#1d4ed8" />
             <span style={{ fontSize: '15px', fontWeight: 700, color: '#0e1e3d' }}>Plan vs Actual Grid</span>
-            <span style={{ fontSize: '12px', color: '#9ca3af' }}>— scroll horizontally to see all weeks</span>
+            <span style={{ fontSize: '12px', color: '#9ca3af' }}>— scroll horizontally for all weeks · click Actual / Leave / Training cells to edit</span>
           </div>
 
           {error ? (
@@ -367,18 +582,19 @@ const PlanGridSection = () => {
               <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
             </div>
           ) : (
-            <WeeklyGrid plans={gridPlans} project={selectedProject} />
+            <WeeklyGrid plans={gridPlans} project={selectedProject} onRefresh={fetchGrid} />
           )}
 
-          {/* Legend */}
           {!loading && !error && (
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', padding: '12px 18px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', marginTop: '16px', alignItems: 'center' }}>
               <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Legend:</span>
               {[
                 { bg: '#f0fdf4', border: '#16a34a', color: '#15803d', label: 'Plan — manager-assigned planned hours' },
-                { bg: '#fffbeb', border: '#d97706', color: '#b45309', label: 'Actual — employee-submitted worked hours' },
+                { bg: '#fffbeb', border: '#d97706', color: '#b45309', label: 'Actual — click to edit (editable)' },
+                { bg: '#faf5ff', border: '#9333ea', color: '#7e22ce', label: 'Leave — click to edit (editable)' },
+                { bg: '#fff7ed', border: '#ea580c', color: '#c2410c', label: 'Training — click to edit (editable)' },
                 { bg: '#fef2f2', border: '#dc2626', color: '#dc2626', label: 'Over-planned (actual > planned)' },
-                { bg: '#f0f9ff', border: '#0284c7', color: '#0284c7', label: 'Wk Hours Cap — max per employee' },
+                { bg: '#f0f9ff', border: '#0284c7', color: '#0284c7', label: 'Wk Hours Cap' },
               ].map((l) => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span style={{ width: '14px', height: '14px', borderRadius: '3px', background: l.bg, border: `1.5px solid ${l.border}`, flexShrink: 0 }} />

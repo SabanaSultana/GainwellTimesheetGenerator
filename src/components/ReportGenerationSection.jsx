@@ -23,9 +23,9 @@ const ReportGenerationSection = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res  = await fetch(SummaryApi.getAllUsers.url, { credentials: 'include' });
+      const res  = await fetch(SummaryApi.getTeamMembers.url, { credentials: 'include' });
       const data = await res.json();
-      if (data.success) setAllUsers((data.data || []).filter((u) => u.role === 'Employee'));
+      if (data.success) setAllUsers(data.data || []);
     } catch { /* silent */ }
   }, []);
 
@@ -396,9 +396,9 @@ const ReportGenerationSection = () => {
                         <div style={{ fontSize: '10.5px', color: '#9ca3af', fontWeight: 400 }}>{r.employeeId}</div>
                       </td>
                       <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed' }}>{r.plan}h</td>
-                      <td style={tdStyle}>{r.plannedProjects}h</td>
+                      <td style={tdStyle}>{r.plannedProjects}</td>
                       <td style={{ ...tdStyle, fontWeight: 700, color: '#16a34a' }}>{r.actual}h</td>
-                      <td style={tdStyle}>{r.actualProjects}h</td>
+                      <td style={tdStyle}>{r.actualProjects}</td>
                       <td style={tdStyle}>{r.availability}h</td>
                       <td style={tdStyle}>{r.absoluteAvailability}h</td>
                       <td style={{ ...tdStyle, color: '#9333ea' }}>{r.leave}h</td>

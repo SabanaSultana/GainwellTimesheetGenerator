@@ -2,6 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import SummaryApi from '../apis/index.jsx';
 import { BsFolderFill, BsChevronDown, BsChevronUp } from 'react-icons/bs';
 
+const PROJECT_PALETTES = [
+  { accent: '#1d4ed8', light: '#eff6ff', border: '#bfdbfe', badge: '#dbeafe', text: '#1e40af', bar: '#3b82f6' },
+  { accent: '#7c3aed', light: '#f5f3ff', border: '#ddd6fe', badge: '#ede9fe', text: '#6d28d9', bar: '#8b5cf6' },
+];
+
 const fmt = (d) =>
   d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
@@ -13,13 +18,13 @@ const statusBadge = (status) => {
   };
   const s = map[status] || map.draft;
   return (
-    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, padding: '2px 10px', borderRadius: '12px', fontSize: '11.5px', fontWeight: 600 }}>
+    <span style={{ background: s.bg, color: s.color, border: `1px solid ${s.border}`, padding: '3px 11px', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}>
       {s.label}
     </span>
   );
 };
 
-const WeeklyBreakdown = ({ projectId }) => {
+const WeeklyBreakdown = ({ projectId, palette }) => {
   const [logs, setLogs]       = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
@@ -39,63 +44,103 @@ const WeeklyBreakdown = ({ projectId }) => {
     return () => { cancelled = true; };
   }, [projectId]);
 
-  if (loading) return <div style={{ padding: '12px', color: '#9ca3af', fontSize: '13px' }}>Loading weekly data…</div>;
-  if (error)   return <div style={{ padding: '12px', color: '#dc2626', fontSize: '13px' }}>{error}</div>;
-  if (logs.length === 0) return <div style={{ padding: '12px', color: '#9ca3af', fontSize: '13px' }}>No weekly entries found for this project.</div>;
+  if (loading) return <div style={{ padding: '16px', color: '#9ca3af', fontSize: '14px' }}>Loading weekly data…</div>;
+  if (error)   return <div style={{ padding: '16px', color: '#dc2626', fontSize: '14px' }}>{error}</div>;
+  if (logs.length === 0) return <div style={{ padding: '16px', color: '#9ca3af', fontSize: '14px' }}>No weekly entries found for this project.</div>;
 
-  const thStyle = { padding: '9px 12px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: '2px solid #f3f4f6', background: '#fafafa', whiteSpace: 'nowrap' };
-  const tdStyle = { padding: '10px 12px', fontSize: '12.5px', color: '#374151', borderBottom: '1px solid #f3f4f6', verticalAlign: 'middle' };
+  const thStyle = {
+    padding: '10px 14px', textAlign: 'left', fontSize: '12px', fontWeight: 700,
+    color: palette.text, textTransform: 'uppercase', letterSpacing: '0.4px',
+    borderBottom: `2px solid ${palette.border}`, background: palette.light, whiteSpace: 'nowrap',
+  };
+  const tdStyle = {
+    padding: '11px 14px', fontSize: '14px', color: '#374151',
+    borderBottom: `1px solid ${palette.border}`, verticalAlign: 'middle',
+  };
+
+  const cols = [
+    { label: 'Year' },
+    { label: 'Week No.' },
+    { label: 'Planned (h)' },
+    { label: 'Actual (h)' },
+    { label: 'Leave (h)' },
+    { label: 'Training (h)' },
+    { label: '% Progress' },
+    { label: 'Status' },
+  ];
+
+  // Sum of all reported progress values across all weeks
+  const pctLogs       = logs.filter((l) => l.progressPercent != null);
+  const projectProgress = pctLogs.length > 0 ? pctLogs.reduce((s, l) => s + l.progressPercent, 0) : null;
 
   return (
-    <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e5e7eb', marginTop: '4px' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '780px' }}>
+    <div style={{ overflowX: 'auto', borderRadius: '8px', border: `1.5px solid ${palette.border}`, marginTop: '4px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '620px' }}>
         <thead>
           <tr>
-            {['Year', 'Week No.', 'Planned Hrs', 'Actual Hrs', 'Leave Hrs', 'Training Hrs', 'Total Wk Hrs', 'Remaining Hrs', 'Remarks', 'Status'].map((h) => (
-              <th key={h} style={thStyle}>{h}</th>
-            ))}
+            {cols.map((c) => <th key={c.label} style={thStyle}>{c.label}</th>)}
           </tr>
         </thead>
         <tbody>
           {logs.map((log, i) => {
-            const planned   = log.plannedHours    || 0;
-            const actual    = log.workedHours     || 0;
-            const leave     = log.leaveHours      || 0;
-            const training  = log.trainingHours   || 0;
-            const totalWk   = log.totalWeeklyHours || 0;
-            const remaining = Math.max(0, planned - actual);
+            const planned  = log.plannedHours  || 0;
+            const actual   = log.workedHours   || 0;
+            const leave    = log.leaveHours    || 0;
+            const training = log.trainingHours || 0;
             return (
-              <tr key={log._id} style={{ background: i % 2 === 0 ? '#fff' : '#fafafa' }}>
+              <tr key={log._id} style={{ background: i % 2 === 0 ? '#fff' : palette.light }}>
                 <td style={{ ...tdStyle, fontWeight: 600 }}>{log.year}</td>
-                <td style={{ ...tdStyle }}>
-                  <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '2px 9px', borderRadius: '12px', fontSize: '12px', fontWeight: 700 }}>
+                <td style={tdStyle}>
+                  <span style={{ background: palette.badge, color: palette.accent, padding: '3px 10px', borderRadius: '12px', fontSize: '13px', fontWeight: 700 }}>
                     Wk {log.weekNumber}
                   </span>
                 </td>
-                <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed' }}>{planned}h</td>
-                <td style={{ ...tdStyle, fontWeight: 700, color: '#16a34a' }}>{actual}h</td>
-                <td style={{ ...tdStyle, color: '#9333ea' }}>{leave}h</td>
-                <td style={{ ...tdStyle, color: '#d97706' }}>{training}h</td>
-                <td style={{ ...tdStyle, color: '#1d4ed8', fontWeight: 600 }}>{totalWk > 0 ? `${totalWk}h` : '—'}</td>
-                <td style={{ ...tdStyle, fontWeight: 700, color: remaining <= 0 ? '#dc2626' : '#0891b2' }}>{remaining}h</td>
-                <td style={{ ...tdStyle, color: '#6b7280', maxWidth: '160px' }}>
-                  <span title={log.remarks}>{log.remarks ? (log.remarks.length > 40 ? log.remarks.slice(0, 40) + '…' : log.remarks) : '—'}</span>
+                <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed' }}>{planned}</td>
+                <td style={{ ...tdStyle, fontWeight: 700, color: '#1d4ed8' }}>{actual}</td>
+                <td style={{ ...tdStyle, color: '#6d28d9' }}>{leave}</td>
+                <td style={{ ...tdStyle, color: '#2563eb' }}>{training}</td>
+                <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed' }}>
+                  {log.progressPercent != null
+                    ? `${log.progressPercent}%`
+                    : <span style={{ color: '#d1d5db', fontWeight: 400 }}>—</span>}
                 </td>
                 <td style={tdStyle}>{statusBadge(log.status)}</td>
               </tr>
             );
           })}
+          {/* Total progress summary row */}
+          <tr style={{ background: `linear-gradient(90deg,${palette.light},#f5f3ff)`, borderTop: `2px solid ${palette.border}` }}>
+            <td colSpan={6} style={{ ...tdStyle, fontWeight: 700, color: palette.accent, fontSize: '12.5px' }}>
+              Total Project Progress
+              <span style={{ marginLeft: '8px', fontWeight: 400, color: '#9ca3af', fontSize: '11px' }}>
+                (sum of all weeks)
+              </span>
+            </td>
+            <td style={{ ...tdStyle, fontWeight: 800, color: '#7c3aed', fontSize: '16px' }}>
+              {projectProgress != null
+                ? <span style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', padding: '3px 12px', borderRadius: '12px' }}>{projectProgress}%</span>
+                : <span style={{ color: '#d1d5db', fontWeight: 400, fontSize: '13px' }}>—</span>}
+            </td>
+            <td style={tdStyle} />
+          </tr>
         </tbody>
       </table>
     </div>
   );
 };
 
+const StatChip = ({ label, value, color, bg }) => (
+  <div style={{ textAlign: 'center', padding: '10px 16px', background: bg, borderRadius: '10px', minWidth: '90px' }}>
+    <div style={{ fontSize: '11px', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px', marginBottom: '4px' }}>{label}</div>
+    <div style={{ fontSize: '20px', fontWeight: 800, color }}>{value}</div>
+  </div>
+);
+
 const EmployeeProjectsView = () => {
-  const [projects, setProjects]   = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState('');
-  const [expanded, setExpanded]   = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+  const [expanded, setExpanded] = useState(null);
 
   const fetchProjects = useCallback(async () => {
     setLoading(true); setError('');
@@ -112,9 +157,9 @@ const EmployeeProjectsView = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {[...Array(3)].map((_, i) => (
-          <div key={i} style={{ height: '100px', borderRadius: '10px', background: 'linear-gradient(90deg,#f3f4f6 25%,#e9eaeb 50%,#f3f4f6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.3s infinite' }} />
+          <div key={i} style={{ height: '160px', borderRadius: '12px', background: 'linear-gradient(90deg,#f3f4f6 25%,#e9eaeb 50%,#f3f4f6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.3s infinite' }} />
         ))}
         <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
       </div>
@@ -122,85 +167,95 @@ const EmployeeProjectsView = () => {
   }
 
   if (error) {
-    return <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '12px 16px', borderRadius: '8px', fontSize: '13px' }}>{error}</div>;
+    return <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '14px 18px', borderRadius: '10px', fontSize: '14px' }}>{error}</div>;
   }
 
   if (projects.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px 40px' }}>
-        <BsFolderFill size={40} color="#d1d5db" style={{ marginBottom: '14px' }} />
-        <p style={{ fontSize: '15px', fontWeight: 600, color: '#374151', margin: '0 0 6px' }}>No projects assigned</p>
-        <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0 }}>Your manager will allocate you to projects.</p>
+      <div style={{ textAlign: 'center', padding: '70px 40px' }}>
+        <BsFolderFill size={48} color="#d1d5db" style={{ marginBottom: '16px' }} />
+        <p style={{ fontSize: '17px', fontWeight: 700, color: '#374151', margin: '0 0 6px' }}>No projects assigned</p>
+        <p style={{ fontSize: '14px', color: '#9ca3af', margin: 0 }}>Your manager will allocate you to projects.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      {projects.map((p) => {
-        const pct    = p.totalAllocatedHours > 0 ? Math.min(100, Math.round((p.consumedHours / p.totalAllocatedHours) * 100)) : 0;
-        const isExp  = expanded === p.allocationId;
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+      {projects.map((p, idx) => {
+        const palette  = PROJECT_PALETTES[idx % PROJECT_PALETTES.length];
+        const isExp    = expanded === p.allocationId;
 
         return (
           <div
             key={p.allocationId}
-            style={{ background: '#ffffff', border: '1.5px solid #e5e7eb', borderRadius: '12px', boxShadow: '0 1px 6px rgba(0,0,0,0.05)' }}
+            style={{
+              background: '#fff',
+              border: `1.5px solid ${palette.border}`,
+              borderRadius: '14px',
+              boxShadow: `0 2px 12px ${palette.border}88`,
+              overflow: 'hidden',
+            }}
           >
-            {/* Header row */}
-            <div style={{ padding: '20px 24px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                    <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 }}>
+            {/* Colored top accent strip */}
+            <div style={{ height: '5px', background: `linear-gradient(90deg, ${palette.accent}, ${palette.bar})` }} />
+
+            <div style={{ padding: '22px 26px' }}>
+              {/* Project identity */}
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '18px' }}>
+                <div style={{ flex: 1, minWidth: '220px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    <span style={{ background: palette.badge, color: palette.accent, padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 800, letterSpacing: '0.3px' }}>
                       {p.project?.projectCode}
                     </span>
-                    <span style={{ fontSize: '11.5px', color: '#9ca3af' }}>{p.department}</span>
+                    {p.department && (
+                      <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600 }}>{p.department}</span>
+                    )}
                   </div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: '15px', fontWeight: 700, color: '#0e1e3d' }}>{p.project?.projectName}</h4>
-                  <p style={{ margin: 0, fontSize: '12.5px', color: '#6b7280' }}>
+                  <h3 style={{ margin: '0 0 5px', fontSize: '17px', fontWeight: 800, color: '#0e1e3d', wordBreak: 'break-word' }}>
+                    {p.project?.projectName}
+                  </h3>
+                  <p style={{ margin: '0 0 4px', fontSize: '13px', color: '#6b7280' }}>
                     {fmt(p.project?.startDate)} — {fmt(p.project?.endDate)}
                   </p>
-                </div>
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                  {[
-                    { label: 'Allocated',  value: `${p.totalAllocatedHours}h`, color: '#1d4ed8' },
-                    { label: 'Consumed',   value: `${p.consumedHours}h`,       color: '#16a34a' },
-                    { label: 'Remaining',  value: `${p.remainingHours}h`,      color: p.remainingHours <= 0 ? '#dc2626' : '#0891b2' },
-                    { label: 'This Week',  value: p.currentWeekPlan > 0 ? `${p.currentWeekPlan}h` : '—', color: '#d97706' },
-                  ].map((s) => (
-                    <div key={s.label} style={{ textAlign: 'center' }}>
-                      <p style={{ margin: '0 0 2px', fontSize: '11px', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase' }}>{s.label}</p>
-                      <p style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: s.color }}>{s.value}</p>
-                    </div>
-                  ))}
+                  {p.project?.projectDescription && (
+                    <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                      {p.project.projectDescription}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Progress bar */}
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                  <span style={{ fontSize: '12px', color: '#6b7280' }}>Overall Progress</span>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: pct >= 100 ? '#dc2626' : '#1d4ed8' }}>{pct}%</span>
-                </div>
-                <div style={{ height: '7px', borderRadius: '4px', background: '#e5e7eb', overflow: 'hidden' }}>
-                  <div style={{ width: `${pct}%`, height: '100%', background: pct >= 100 ? '#dc2626' : '#1d4ed8', borderRadius: '4px', transition: 'width 0.4s' }} />
-                </div>
+              {/* Stats chips */}
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '18px' }}>
+                <StatChip label="This Week (h)"  value={p.currentWeekPlan > 0 ? p.currentWeekPlan : '—'} color="#2563eb" bg="#dbeafe" />
+                <StatChip label="Total Weeks"    value={p.totalWeeks ?? 0}     color="#1e40af"         bg="#e0e7ff"        />
+                <StatChip label="Submitted"      value={p.submittedWeeks ?? 0} color="#16a34a"         bg="#f0fdf4"        />
+                <StatChip label="Pending"        value={p.pendingWeeks ?? 0}   color={p.pendingWeeks > 0 ? '#d97706' : '#9ca3af'} bg={p.pendingWeeks > 0 ? '#fffbeb' : '#f9fafb'} />
               </div>
 
-              {/* Expand / collapse toggle */}
+              {/* Toggle button */}
               <button
                 onClick={() => setExpanded(isExp ? null : p.allocationId)}
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '7px', border: '1.5px solid #e5e7eb', background: isExp ? '#eff6ff' : '#fff', color: isExp ? '#1d4ed8' : '#374151', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '7px 16px', borderRadius: '8px',
+                  border: `1.5px solid ${palette.border}`,
+                  background: isExp ? palette.badge : '#fff',
+                  color: isExp ? palette.accent : '#374151',
+                  fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+                }}
               >
-                {isExp ? <BsChevronUp size={12} /> : <BsChevronDown size={12} />}
+                {isExp ? <BsChevronUp size={13} /> : <BsChevronDown size={13} />}
                 {isExp ? 'Hide Weekly Details' : 'View Weekly Details'}
               </button>
             </div>
 
             {/* Weekly breakdown */}
             {isExp && (
-              <div style={{ borderTop: '1px solid #f3f4f6', padding: '0 24px 20px' }}>
-                <WeeklyBreakdown projectId={p.project._id} />
+              <div style={{ borderTop: `1.5px solid ${palette.border}`, padding: '0 26px 22px' }}>
+                <p style={{ margin: '14px 0 10px', fontSize: '14px', fontWeight: 700, color: palette.accent }}>Weekly Breakdown</p>
+                <WeeklyBreakdown projectId={p.project._id} palette={palette} />
               </div>
             )}
           </div>

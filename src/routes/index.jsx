@@ -5,10 +5,11 @@ import Signup            from '../pages/Signup.jsx';
 import App               from '../App.jsx';
 import ProtectedRoute    from '../components/ProtectedRoute.jsx';
 import RoleProtectedRoute from '../components/RoleProtectedRoute.jsx';
-import ManagerDashboard  from '../pages/ManagerDashboard.jsx';
-import EmployeeDashboard from '../pages/EmployeeDashboard.jsx';
-import CreateProject     from '../components/CreateProject.jsx';
-import ProjectDetailPage from '../pages/ProjectDetailPage.jsx';
+import ManagerDashboard        from '../pages/ManagerDashboard.jsx';
+import EmployeeDashboard       from '../pages/EmployeeDashboard.jsx';
+import CreateProject           from '../components/CreateProject.jsx';
+import ProjectDetailPage       from '../pages/ProjectDetailPage.jsx';
+import EmployeeWeeklyTracking  from '../pages/EmployeeWeeklyTracking.jsx';
 
 /**
  * Route hierarchy:
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
               {
                 path: '/dashboard/manager/:employeeId/project/:projectId',
                 element: <ProjectDetailPage />,
+              },
+              {
+                path: '/dashboard/manager/:employeeId/track-employee/:targetEmpId',
+                element: <EmployeeWeeklyTracking />,
               },
             ],
           },

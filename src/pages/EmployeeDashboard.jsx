@@ -14,9 +14,9 @@ import {
 } from 'react-icons/bs';
 
 const TAB_ICONS = {
-  addWeekly: <BsCalendarPlus size={15} />,
-  projects:  <BsFolderFill   size={15} />,
-  hours:     <BsClockHistory size={15} />,
+  addWeekly: <BsCalendarPlus size={18} />,
+  projects:  <BsFolderFill   size={18} />,
+  hours:     <BsClockHistory size={18} />,
 };
 
 const EmployeeDashboard = () => {
@@ -125,15 +125,15 @@ const EmployeeDashboard = () => {
               key={key}
               onClick={() => setActiveKey(key)}
               style={{
-                display: 'flex', alignItems: 'center', gap: '7px',
-                padding: '10px 20px',
-                borderRadius: '9px',
+                display: 'flex', alignItems: 'center', gap: '9px',
+                padding: '13px 28px',
+                borderRadius: '10px',
                 border: isActive ? 'none' : '1.5px solid #e5e7eb',
                 background: isActive ? 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)' : '#ffffff',
                 color: isActive ? '#ffffff' : '#374151',
-                fontSize: '13px', fontWeight: 600,
+                fontSize: '15px', fontWeight: 700,
                 cursor: 'pointer',
-                boxShadow: isActive ? '0 4px 14px rgba(0,0,0,0.12)' : '0 1px 4px rgba(0,0,0,0.06)',
+                boxShadow: isActive ? '0 4px 16px rgba(59,130,246,0.3)' : '0 1px 4px rgba(0,0,0,0.06)',
                 transition: 'all 0.18s ease',
                 whiteSpace: 'nowrap',
                 fontFamily: 'Arial, sans-serif',
