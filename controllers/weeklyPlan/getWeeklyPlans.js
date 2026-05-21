@@ -16,6 +16,12 @@ const getWeeklyPlans = async (req, res) => {
     if (req.user.role === 'Employee') {
       query.employee = req.user.id;
     }
+    // Manager(COE) only sees plans for their direct reports
+    else if (req.user.role === 'Manager(COE)') {
+      const mgr     = await User.findById(req.user.id).select('employeeId');
+      const reports = await User.find({ managerEmployeeId: mgr.employeeId }).select('_id');
+      query.employee = { $in: reports.map((e) => e._id) };
+    }
 
     const plans = await WeeklyPlan.find(query)
       .populate('employee',  'name employeeId department')
@@ -47,13 +53,14 @@ const getWeeklyPlans = async (req, res) => {
       const log = logMap[`${plan.employeeId}-${plan.year}-${plan.weekNumber}`] || {};
       return {
         ...plan.toObject(),
-        workedHours:      log.workedHours   || 0,
-        trainingHours:    log.trainingHours || 0,
-        leaveHours:       log.leaveHours    || 0,
-        remarks:          log.remarks       || '',
-        status:           log.status        || null,
-        logId:            log._id           || null,
-        logStatus:        log.status        || 'not submitted',
+        workedHours:      log.workedHours      || 0,
+        trainingHours:    log.trainingHours    || 0,
+        leaveHours:       log.leaveHours       || 0,
+        progressPercent:  log.progressPercent  ?? null,
+        remarks:          log.remarks          || '',
+        status:           log.status           || null,
+        logId:            log._id              || null,
+        logStatus:        log.status           || 'not submitted',
         totalWeeklyHours: configMap[`${plan.year}-${plan.weekNumber}`] || 0,
         remainingHours:   Math.max(0, plan.plannedHours - (log.workedHours || 0)),
       };

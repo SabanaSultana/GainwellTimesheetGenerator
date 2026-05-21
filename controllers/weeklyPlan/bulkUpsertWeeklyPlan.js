@@ -1,7 +1,9 @@
 const WeeklyPlan          = require('../../models/weeklyPlanModel');
 const WeeklyProjectConfig = require('../../models/weeklyProjectConfigModel');
+const WeeklyCap           = require('../../models/weeklyCapModel');
 const AuditLog            = require('../../models/auditLogModel');
 const User                = require('../../models/userModel');
+const mongoose            = require('mongoose');
 
 const bulkUpsertWeeklyPlan = async (req, res) => {
   try {
@@ -24,6 +26,70 @@ const bulkUpsertWeeklyPlan = async (req, res) => {
     }
 
     const editor = await User.findById(req.user.id).select('name employeeId role');
+
+    // Manager(COE): all employees in the request must be their own direct reports
+    if (req.user.role === 'Manager(COE)') {
+      const mgr       = await User.findById(req.user.id).select('employeeId');
+      const reports   = await User.find({ managerEmployeeId: mgr.employeeId }).select('_id');
+      const reportSet = new Set(reports.map((r) => r._id.toString()));
+      const blocked   = employees.filter((e) => e.employeeUserId && !reportSet.has(e.employeeUserId));
+      if (blocked.length > 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'You can only assign plans for your own direct reports.',
+        });
+      }
+    }
+
+    // Upsert global WeeklyCap for this year+week
+    let weeklyCap = await WeeklyCap.findOne({ year: Number(year), weekNumber: Number(weekNumber) });
+    if (weeklyCap) {
+      weeklyCap.totalWeeklyHours = Number(totalWeeklyHours);
+      weeklyCap.updatedBy        = req.user.id;
+      await weeklyCap.save();
+    } else {
+      weeklyCap = await WeeklyCap.create({
+        year: Number(year), weekNumber: Number(weekNumber),
+        totalWeeklyHours: Number(totalWeeklyHours),
+        createdBy: req.user.id,
+      });
+    }
+
+    // Validate: each employee's total planned hours this week (all projects) must not exceed WeeklyCap
+    const empIds = employees
+      .filter((e) => e.employeeUserId && mongoose.Types.ObjectId.isValid(e.employeeUserId))
+      .map((e) => new mongoose.Types.ObjectId(e.employeeUserId));
+
+    if (empIds.length > 0) {
+      const otherAgg = await WeeklyPlan.aggregate([
+        {
+          $match: {
+            employee:   { $in: empIds },
+            year:       Number(year),
+            weekNumber: Number(weekNumber),
+            project:    { $ne: new mongoose.Types.ObjectId(projectId) },
+          },
+        },
+        { $group: { _id: '$employee', total: { $sum: '$plannedHours' } } },
+      ]);
+      const otherMap = {};
+      otherAgg.forEach((r) => { otherMap[r._id.toString()] = r.total; });
+
+      const violations = employees.filter((e) => {
+        const already = otherMap[e.employeeUserId] || 0;
+        return already + Number(e.plannedHours || 0) > Number(totalWeeklyHours);
+      });
+
+      if (violations.length > 0) {
+        const names = await Promise.all(
+          violations.map((e) => User.findById(e.employeeUserId).select('name').then((u) => u?.name || e.employeeUserId))
+        );
+        return res.status(400).json({
+          success: false,
+          message: `These employees would exceed the ${totalWeeklyHours}h weekly cap: ${names.join(', ')}. Reduce their planned hours.`,
+        });
+      }
+    }
 
     // Upsert WeeklyProjectConfig
     let config    = await WeeklyProjectConfig.findOne({ project: projectId, year: Number(year), weekNumber: Number(weekNumber) });

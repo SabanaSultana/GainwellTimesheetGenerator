@@ -11,12 +11,16 @@ const getAllWeeklyPlans = async (req, res) => {
     if (year)       planQuery.year       = Number(year);
     if (weekNumber) planQuery.weekNumber = Number(weekNumber);
 
-    // Manager(COE) scope: only their department's employees
+    // Manager(COE) sees only their own direct reports' plans (scoped by managerEmployeeId)
     if (req.user.role === 'Manager(COE)') {
-      const manager      = await User.findById(req.user.id).select('department');
-      const deptEmployees = await User.find({ department: manager.department, role: 'Employee' }).select('_id');
-      planQuery.employee = { $in: deptEmployees.map((e) => e._id) };
+      const mgr     = await User.findById(req.user.id).select('employeeId');
+      const reports = await User.find({ managerEmployeeId: mgr.employeeId }).select('_id');
+      if (reports.length === 0) {
+        return res.status(200).json({ success: true, data: [] });
+      }
+      planQuery.employee = { $in: reports.map((e) => e._id) };
     }
+    // Head of Engineering / Admin see all plans — no additional filter
 
     let plans = await WeeklyPlan.find(planQuery)
       .populate('employee',  'name employeeId department')

@@ -1,10 +1,11 @@
-const Project    = require('../../models/projectModel');
-const Allocation = require('../../models/allocationModel');
-const DeptHours  = require('../../models/deptHoursModel');
-const WeeklyPlan = require('../../models/weeklyPlanModel');
-const WorkLog    = require('../../models/workLogModel');
-const AuditLog   = require('../../models/auditLogModel');
-const User       = require('../../models/userModel');
+const Project             = require('../../models/projectModel');
+const Allocation          = require('../../models/allocationModel');
+const DeptHours           = require('../../models/deptHoursModel');
+const WeeklyPlan          = require('../../models/weeklyPlanModel');
+const WeeklyProjectConfig = require('../../models/weeklyProjectConfigModel');
+const WorkLog             = require('../../models/workLogModel');
+const AuditLog            = require('../../models/auditLogModel');
+const User                = require('../../models/userModel');
 
 const deleteProject = async (req, res) => {
   try {
@@ -55,6 +56,7 @@ const deleteProject = async (req, res) => {
       Allocation.deleteMany({ project: id }),
       DeptHours.deleteMany({ project: id }),
       WeeklyPlan.deleteMany({ project: id }),
+      WeeklyProjectConfig.deleteMany({ project: id }),
       WorkLog.deleteMany({ project: id }),
     ]);
 

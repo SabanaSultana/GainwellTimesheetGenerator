@@ -29,12 +29,16 @@ const getEmployeeProjects = async (req, res) => {
     const allocatedProjectIds = new Set(allocations.map((a) => String(a.project._id)));
 
     const enrichAllocation = async (a) => {
-      const logs = await WorkLog.find({ project: a.project._id, employee: userId, status: 'submitted' });
-      const consumedHours = logs.reduce((sum, l) => sum + (l.workedHours || 0), 0);
-      const currentPlan = await WeeklyPlan.findOne({
-        project: a.project._id, employee: userId,
-        year: now.getFullYear(), weekNumber: weekNo,
-      });
+      const [allLogs, plans] = await Promise.all([
+        WorkLog.find({ project: a.project._id, employee: userId }),
+        WeeklyPlan.find({ project: a.project._id, employee: userId }),
+      ]);
+      const submittedLogs  = allLogs.filter((l) => l.status === 'submitted');
+      const consumedHours  = submittedLogs.reduce((sum, l) => sum + (l.workedHours || 0), 0);
+      const totalWeeks     = plans.length;
+      const submittedWeeks = submittedLogs.length;
+      const pendingWeeks   = Math.max(0, totalWeeks - submittedWeeks);
+      const currentPlan    = plans.find((p) => p.year === now.getFullYear() && p.weekNumber === weekNo);
       return {
         allocationId:        String(a._id),
         project:             a.project,
@@ -44,6 +48,9 @@ const getEmployeeProjects = async (req, res) => {
         remainingHours:      Math.max(0, a.totalAllocatedHours - consumedHours),
         currentWeekPlan:     currentPlan ? currentPlan.plannedHours : 0,
         allocatedBy:         a.allocatedBy,
+        totalWeeks,
+        submittedWeeks,
+        pendingWeeks,
       };
     };
 
@@ -55,12 +62,16 @@ const getEmployeeProjects = async (req, res) => {
       const project = await Project.findById(projectId)
         .select('projectCode projectName projectDescription startDate endDate');
       if (!project) return null;
-      const logs = await WorkLog.find({ project: projectId, employee: userId, status: 'submitted' });
-      const consumedHours = logs.reduce((sum, l) => sum + (l.workedHours || 0), 0);
-      const currentPlan = await WeeklyPlan.findOne({
-        project: projectId, employee: userId,
-        year: now.getFullYear(), weekNumber: weekNo,
-      });
+      const [allLogs, plans] = await Promise.all([
+        WorkLog.find({ project: projectId, employee: userId }),
+        WeeklyPlan.find({ project: projectId, employee: userId }),
+      ]);
+      const submittedLogs  = allLogs.filter((l) => l.status === 'submitted');
+      const consumedHours  = submittedLogs.reduce((sum, l) => sum + (l.workedHours || 0), 0);
+      const totalWeeks     = plans.length;
+      const submittedWeeks = submittedLogs.length;
+      const pendingWeeks   = Math.max(0, totalWeeks - submittedWeeks);
+      const currentPlan    = plans.find((p) => p.year === now.getFullYear() && p.weekNumber === weekNo);
       return {
         allocationId:        `plan_${String(projectId)}`,
         project,
@@ -70,6 +81,9 @@ const getEmployeeProjects = async (req, res) => {
         remainingHours:      0,
         currentWeekPlan:     currentPlan ? currentPlan.plannedHours : 0,
         allocatedBy:         null,
+        totalWeeks,
+        submittedWeeks,
+        pendingWeeks,
       };
     };
 

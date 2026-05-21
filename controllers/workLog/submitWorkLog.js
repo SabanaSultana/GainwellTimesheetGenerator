@@ -5,7 +5,8 @@ const User       = require('../../models/userModel');
 
 const submitWorkLog = async (req, res) => {
   try {
-    const { projectId, year, weekNumber, workedHours = 0, trainingHours = 0, leaveHours = 0, remarks = '', justification } = req.body;
+    const { projectId, year, weekNumber, workedHours = 0, trainingHours = 0, leaveHours = 0, progressPercent, remarks = '', justification } = req.body;
+    const pct = progressPercent !== undefined ? Math.min(100, Math.max(0, Number(progressPercent))) : undefined;
 
     if (!projectId || !year || !weekNumber) {
       return res.status(400).json({ success: false, message: 'projectId, year, and weekNumber are required' });
@@ -76,24 +77,26 @@ const submitWorkLog = async (req, res) => {
       existing.workedHours   = workedHours;
       existing.trainingHours = trainingHours;
       existing.leaveHours    = leaveHours;
+      if (pct !== undefined) existing.progressPercent = pct;
       existing.remarks       = remarks;
       existing.status        = 'submitted';
       existing.submittedAt   = new Date();
       record = await existing.save();
     } else {
       record = await WorkLog.create({
-        project:       projectId,
-        employee:      req.user.id,
-        employeeId:    employee.employeeId,
-        department:    employee.department,
+        project:         projectId,
+        employee:        req.user.id,
+        employeeId:      employee.employeeId,
+        department:      employee.department,
         year,
         weekNumber,
         workedHours,
         trainingHours,
         leaveHours,
+        progressPercent: pct ?? 0,
         remarks,
-        status:        'submitted',
-        submittedAt:   new Date(),
+        status:          'submitted',
+        submittedAt:     new Date(),
       });
     }
 

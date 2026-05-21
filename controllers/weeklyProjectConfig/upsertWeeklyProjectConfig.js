@@ -2,7 +2,7 @@ const WeeklyProjectConfig = require('../../models/weeklyProjectConfigModel');
 
 const upsertWeeklyProjectConfig = async (req, res) => {
   try {
-    const { projectId, year, weekNumber, totalWeeklyHours } = req.body;
+    const { projectId, year, weekNumber, totalWeeklyHours, progressPercent } = req.body;
 
     if (!projectId || !year || !weekNumber || totalWeeklyHours === undefined) {
       return res.status(400).json({ success: false, message: 'projectId, year, weekNumber, and totalWeeklyHours are required' });
@@ -15,9 +15,11 @@ const upsertWeeklyProjectConfig = async (req, res) => {
 
     let record;
     let isUpdate = false;
+    const pct = progressPercent !== undefined ? Math.min(100, Math.max(0, Number(progressPercent))) : undefined;
 
     if (existing) {
       existing.totalWeeklyHours = Number(totalWeeklyHours);
+      if (pct !== undefined) existing.progressPercent = pct;
       existing.updatedBy        = req.user.id;
       record    = await existing.save();
       isUpdate  = true;
@@ -27,6 +29,7 @@ const upsertWeeklyProjectConfig = async (req, res) => {
         year:             Number(year),
         weekNumber:       Number(weekNumber),
         totalWeeklyHours: Number(totalWeeklyHours),
+        progressPercent:  pct ?? 0,
         createdBy:        req.user.id,
       });
     }
