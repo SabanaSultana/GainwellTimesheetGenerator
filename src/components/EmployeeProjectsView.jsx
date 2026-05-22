@@ -228,7 +228,6 @@ const EmployeeProjectsView = () => {
 
               {/* Stats chips */}
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '18px' }}>
-                <StatChip label="This Week (h)"  value={p.currentWeekPlan > 0 ? p.currentWeekPlan : '—'} color="#2563eb" bg="#dbeafe" />
                 <StatChip label="Total Weeks"    value={p.totalWeeks ?? 0}     color="#1e40af"         bg="#e0e7ff"        />
                 <StatChip label="Submitted"      value={p.submittedWeeks ?? 0} color="#16a34a"         bg="#f0fdf4"        />
                 <StatChip label="Pending"        value={p.pendingWeeks ?? 0}   color={p.pendingWeeks > 0 ? '#d97706' : '#9ca3af'} bg={p.pendingWeeks > 0 ? '#fffbeb' : '#f9fafb'} />

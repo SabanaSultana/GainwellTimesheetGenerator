@@ -432,6 +432,7 @@ const CreateProject = ({ embedded = false, onSuccess }) => {
   return (
     <div style={{ borderRadius: '16px', overflow: 'hidden' }}>
       {card}
+      
     </div>
   );
 };

@@ -86,26 +86,29 @@ function buildGridData(plans) {
 // ── Edit Modal ────────────────────────────────────────────────────────────────
 
 const TYPE_CONFIG = {
-  actual:   { label: 'Actual',   color: '#d97706', bg: '#fffbeb' },
-  leave:    { label: 'Leave',    color: '#9333ea', bg: '#faf5ff' },
-  training: { label: 'Training', color: '#ea580c', bg: '#fff7ed' },
+  actual:   { label: 'Actual',   typeBg: '#4b5563', typeColor: '#fff', cellBg: '#6b7280', cellText: '#fff', totalColor: '#374151' },
+  leave:    { label: 'Leave',    typeBg: '#6b7280', typeColor: '#fff', cellBg: '#9ca3af', cellText: '#fff', totalColor: '#4b5563' },
+  training: { label: 'Training', typeBg: '#9ca3af', typeColor: '#fff', cellBg: '#d1d5db', cellText: '#374151', totalColor: '#6b7280' },
 };
 
 const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, saving, saveError, onSave, onClose }) => {
   const cfg = TYPE_CONFIG[modal.type];
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '14px', padding: '28px 32px', width: '380px', boxShadow: '0 24px 72px rgba(0,0,0,0.22)', border: `2px solid ${cfg.bg}` }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#ffffff', borderRadius: '14px', padding: '28px 32px', width: '390px', boxShadow: '0 24px 72px rgba(0,0,0,0.35)', border: '2px solid #e5e7eb' }}>
+        {/* Modal header bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-          <BsPencilSquare size={18} color={cfg.color} />
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0e1e3d' }}>Edit {cfg.label} Hours</h3>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: cfg.typeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <BsPencilSquare size={15} color="#fff" />
+          </div>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#111827' }}>Edit {cfg.label} Hours</h3>
         </div>
         <p style={{ margin: '0 0 20px', fontSize: '13px', color: '#6b7280' }}>
-          <strong>{modal.empName}</strong> · Week {modal.weekNumber} ({modal.year})
+          <strong style={{ color: '#111827' }}>{modal.empName}</strong> · Week {modal.weekNumber} ({modal.year})
         </p>
 
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {cfg.label} Hours
           </label>
           <input
@@ -115,12 +118,12 @@ const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, sa
             value={editVal}
             onChange={(e) => setEditVal(e.target.value)}
             autoFocus
-            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: `1.5px solid ${cfg.bg}`, outline: 'none', fontSize: '15px', fontWeight: 700, color: cfg.color, boxSizing: 'border-box', background: cfg.bg }}
+            style={{ width: '100%', padding: '11px 13px', borderRadius: '8px', border: `2px solid ${cfg.typeBg}`, outline: 'none', fontSize: '16px', fontWeight: 800, color: cfg.typeBg, boxSizing: 'border-box', background: '#f9fafb' }}
           />
         </div>
 
         <div style={{ marginBottom: '18px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Justification <span style={{ color: '#dc2626' }}>*</span>
           </label>
           <textarea
@@ -128,7 +131,7 @@ const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, sa
             onChange={(e) => setEditJustify(e.target.value)}
             placeholder="Reason for this update…"
             rows={3}
-            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: '1.5px solid #e5e7eb', outline: 'none', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: '1.5px solid #d1d5db', outline: 'none', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: '#374151' }}
           />
         </div>
 
@@ -137,10 +140,10 @@ const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, sa
         )}
 
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={saving} style={{ padding: '9px 20px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={onClose} disabled={saving} style={{ padding: '9px 22px', borderRadius: '8px', border: '1.5px solid #d1d5db', background: '#f3f4f6', color: '#374151', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
             Cancel
           </button>
-          <button onClick={onSave} disabled={saving} style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: cfg.color, color: '#fff', fontSize: '13px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+          <button onClick={onSave} disabled={saving} style={{ padding: '9px 22px', borderRadius: '8px', border: 'none', background: cfg.typeBg, color: '#fff', fontSize: '13px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
@@ -161,8 +164,8 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
 
   if (!plans || plans.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '48px 32px', background: '#f9fafb', borderRadius: '12px', border: '1.5px dashed #e5e7eb' }}>
-        <BsTable size={36} color="#d1d5db" style={{ display: 'block', margin: '0 auto 12px' }} />
+      <div style={{ textAlign: 'center', padding: '48px 32px', background: '#f9fafb', borderRadius: '12px', border: '1.5px dashed #d1d5db' }}>
+        <BsTable size={36} color="#9ca3af" style={{ display: 'block', margin: '0 auto 12px' }} />
         <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: 600, color: '#374151' }}>No weekly plans yet for this project</p>
         <p style={{ margin: 0, fontSize: '13px', color: '#9ca3af' }}>Plans assigned in "Add Weekly Plan" will appear here.</p>
       </div>
@@ -241,12 +244,13 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
   });
 
   const editableCell = (type, empId, empName, w, val, rowBg) => {
-    const cfg     = TYPE_CONFIG[type];
-    const hasVal  = val != null;
+    const cfg    = TYPE_CONFIG[type];
+    const hasVal = val != null;
     const planned = planMap[`${empId}::${w.year}-${w.weekNumber}`] || 0;
     const isOver  = type === 'actual' && hasVal && planned > 0 && val > planned;
-    const bg      = hasVal ? (isOver ? '#fef2f2' : cfg.bg) : rowBg;
-    const color   = hasVal ? (isOver ? '#dc2626' : cfg.color) : '#e2e8f0';
+
+    const bg    = isOver ? '#dc2626' : hasVal ? cfg.cellBg : rowBg;
+    const color = hasVal ? cfg.cellText : '#d1d5db';
 
     return (
       <td
@@ -254,20 +258,34 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
         title="Click to edit"
         onClick={() => openEdit(empId, empName, w.year, w.weekNumber, type)}
         style={{
-          ...cellBase, background: bg, color, fontWeight: hasVal ? 700 : 400,
-          fontSize: '12.5px', height: '30px', borderLeft: '1px solid #e5e7eb',
-          cursor: 'pointer', transition: 'filter 0.15s',
+          ...cellBase,
+          background: bg,
+          color,
+          fontWeight: hasVal ? 700 : 400,
+          fontSize: '12.5px',
+          height: '30px',
+          borderLeft: hasVal ? `1px solid rgba(255,255,255,0.12)` : '1px solid #e5e7eb',
+          cursor: 'pointer',
+          transition: 'filter 0.12s, box-shadow 0.12s',
+          outline: (!hasVal) ? '1px dashed #d1d5db' : 'none',
+          outlineOffset: '-2px',
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(0.93)'; }}
-        onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.filter = 'brightness(0.85)';
+          e.currentTarget.style.boxShadow = `inset 0 0 0 2px ${cfg.typeBg}`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.filter = 'none';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
       >
         {hasVal ? (
-          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+          <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px' }}>
             {val}
-            <BsPencilSquare size={9} style={{ opacity: 0.5, flexShrink: 0 }} />
+            <BsPencilSquare size={9} style={{ opacity: 0.75, flexShrink: 0 }} />
           </span>
         ) : (
-          <span style={{ color: '#d1d5db', fontSize: '11px' }}>—</span>
+          <span style={{ color: '#d1d5db', fontSize: '13px' }}>—</span>
         )}
       </td>
     );
@@ -278,15 +296,15 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
       {editModal && (
         <EditModal
           modal={editModal}
-          editVal={editVal}       setEditVal={setEditVal}
+          editVal={editVal}         setEditVal={setEditVal}
           editJustify={editJustify} setEditJustify={setEditJustify}
-          saving={saving} saveError={saveError}
+          saving={saving}           saveError={saveError}
           onSave={handleSave}
           onClose={() => setEditModal(null)}
         />
       )}
 
-      <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1.5px solid #e2e8f0', boxShadow: '0 4px 20px rgba(0,0,0,0.07)' }}>
+      <div style={{ overflowX: 'auto', borderRadius: '12px', border: '1.5px solid #d1d5db', boxShadow: '0 4px 20px rgba(0,0,0,0.10)' }}>
         <table style={{ borderCollapse: 'collapse', tableLayout: 'fixed', minWidth: `${L_TOTAL + CW_TOTAL + allWeeks.length * CW_WEEK}px` }}>
           <colgroup>
             <col style={{ width: CW_NAME }} />
@@ -300,15 +318,15 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
             <tr>
               <th colSpan={3} style={{ ...cellBase, position: 'sticky', left: 0, zIndex: 5, background: '#0f172a', color: '#fff', textAlign: 'left', padding: '0 14px', height: '40px', borderRight: '2px solid rgba(255,255,255,0.15)', fontWeight: 700 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <BsFolderFill size={13} color="#60a5fa" />
+                  <BsFolderFill size={13} color="#9ca3af" />
                   <span style={{ fontSize: '12.5px' }}>{project?.projectCode}</span>
-                  <span style={{ fontWeight: 400, fontSize: '11.5px', color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project?.projectName}</span>
+                  <span style={{ fontWeight: 400, fontSize: '11.5px', color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project?.projectName}</span>
                 </div>
               </th>
               {monthGroups.map((mg) => {
                 const c = MONTH_PALETTE[mg.colorIdx];
                 return (
-                  <th key={mg.key} colSpan={mg.weeks.length} style={{ ...cellBase, background: c.bg, color: c.text, fontWeight: 700, fontSize: '12px', height: '40px', letterSpacing: '0.5px', borderLeft: '2px solid rgba(255,255,255,0.25)' }}>
+                  <th key={mg.key} colSpan={mg.weeks.length} style={{ ...cellBase, background: c.bg, color: c.text, fontWeight: 700, fontSize: '12px', height: '40px', letterSpacing: '0.5px', borderLeft: '2px solid rgba(255,255,255,0.15)' }}>
                     {mg.label} {mg.year}
                   </th>
                 );
@@ -351,9 +369,8 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
 
           <tbody>
             {employees.map((emp, ei) => {
-              const rowBg = ei % 2 === 0 ? '#ffffff' : '#f8faff';
+              const rowBg = ei % 2 === 0 ? '#ffffff' : '#f9fafb';
 
-              // Totals with local overrides factored in
               let ovrActual = 0, ovrLeave = 0, ovrTraining = 0;
               allWeeks.forEach((w) => {
                 const k = `${emp.id}::${w.year}-${w.weekNumber}`;
@@ -388,10 +405,12 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
                   {/* Actual row (editable) */}
                   <tr>
                     <td style={{ ...sticky(L_NAME, rowBg, { borderTop: 'none', zIndex: 3 }), height: '30px' }} />
-                    <td style={{ ...sticky(L_TYPE, '#fffbeb', { zIndex: 3 }), color: '#d97706', fontWeight: 700, fontSize: '11.5px', height: '30px' }}>
-                      <span title="Click cells to edit">Actual <BsPencilSquare size={9} style={{ opacity: 0.6 }} /></span>
+                    <td style={{ ...sticky(L_TYPE, TYPE_CONFIG.actual.typeBg, { zIndex: 3, borderRight: '2px solid rgba(255,255,255,0.15)' }), color: TYPE_CONFIG.actual.typeColor, fontWeight: 700, fontSize: '11.5px', height: '30px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        Actual <BsPencilSquare size={9} style={{ opacity: 0.8 }} />
+                      </span>
                     </td>
-                    <td style={{ ...sticky(L_TOTAL, '#fffbeb', { zIndex: 3 }), color: '#b45309', fontWeight: 700, fontSize: '12.5px', height: '30px' }}>
+                    <td style={{ ...sticky(L_TOTAL, '#f3f4f6', { zIndex: 3 }), color: TYPE_CONFIG.actual.totalColor, fontWeight: 700, fontSize: '12.5px', height: '30px' }}>
                       {ovrActual > 0 ? `${ovrActual}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
                     </td>
                     {allWeeks.map((w) => {
@@ -404,10 +423,12 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
                   {/* Leave row (editable) */}
                   <tr>
                     <td style={{ ...sticky(L_NAME, rowBg, { borderTop: 'none', zIndex: 3 }), height: '28px' }} />
-                    <td style={{ ...sticky(L_TYPE, '#faf5ff', { zIndex: 3 }), color: '#9333ea', fontWeight: 700, fontSize: '11.5px', height: '28px' }}>
-                      <span title="Click cells to edit">Leave <BsPencilSquare size={9} style={{ opacity: 0.6 }} /></span>
+                    <td style={{ ...sticky(L_TYPE, TYPE_CONFIG.leave.typeBg, { zIndex: 3, borderRight: '2px solid rgba(255,255,255,0.15)' }), color: TYPE_CONFIG.leave.typeColor, fontWeight: 700, fontSize: '11.5px', height: '28px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        Leave <BsPencilSquare size={9} style={{ opacity: 0.8 }} />
+                      </span>
                     </td>
-                    <td style={{ ...sticky(L_TOTAL, '#faf5ff', { zIndex: 3 }), color: '#7e22ce', fontWeight: 700, fontSize: '12.5px', height: '28px' }}>
+                    <td style={{ ...sticky(L_TOTAL, '#f3f4f6', { zIndex: 3 }), color: TYPE_CONFIG.leave.totalColor, fontWeight: 700, fontSize: '12.5px', height: '28px' }}>
                       {ovrLeave > 0 ? `${ovrLeave}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
                     </td>
                     {allWeeks.map((w) => {
@@ -420,10 +441,12 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
                   {/* Training row (editable) */}
                   <tr style={{ borderBottom: `2px solid ${ei % 2 === 0 ? '#e5e7eb' : '#dde7ff'}` }}>
                     <td style={{ ...sticky(L_NAME, rowBg, { borderTop: 'none', zIndex: 3 }), height: '28px' }} />
-                    <td style={{ ...sticky(L_TYPE, '#fff7ed', { zIndex: 3 }), color: '#ea580c', fontWeight: 700, fontSize: '11.5px', height: '28px' }}>
-                      <span title="Click cells to edit">Train <BsPencilSquare size={9} style={{ opacity: 0.6 }} /></span>
+                    <td style={{ ...sticky(L_TYPE, TYPE_CONFIG.training.typeBg, { zIndex: 3, borderRight: '2px solid rgba(255,255,255,0.15)' }), color: TYPE_CONFIG.training.typeColor, fontWeight: 700, fontSize: '11.5px', height: '28px' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        Train <BsPencilSquare size={9} style={{ opacity: 0.8 }} />
+                      </span>
                     </td>
-                    <td style={{ ...sticky(L_TOTAL, '#fff7ed', { zIndex: 3 }), color: '#c2410c', fontWeight: 700, fontSize: '12.5px', height: '28px' }}>
+                    <td style={{ ...sticky(L_TOTAL, '#f3f4f6', { zIndex: 3 }), color: TYPE_CONFIG.training.totalColor, fontWeight: 700, fontSize: '12.5px', height: '28px' }}>
                       {ovrTraining > 0 ? `${ovrTraining}h` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>0h</span>}
                     </td>
                     {allWeeks.map((w) => {
@@ -490,7 +513,7 @@ const PlanGridSection = () => {
       {/* ── Section header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '22px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '44px', height: '44px', borderRadius: '11px', background: 'linear-gradient(135deg,#0284c7,#0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(2,132,199,0.3)', flexShrink: 0 }}>
+          <div style={{ width: '44px', height: '44px', borderRadius: '11px', background: 'linear-gradient(135deg,#0284c7,#0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.18)', flexShrink: 0 }}>
             <BsTable size={20} color="#fff" />
           </div>
           <div>
@@ -504,7 +527,7 @@ const PlanGridSection = () => {
           {selectedProjectId && (
             <button
               onClick={fetchGrid}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1.5px solid #d1d5db', background: '#f3f4f6', color: '#374151', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}
             >
               <BsArrowClockwise size={13} /> Refresh
             </button>
@@ -590,9 +613,9 @@ const PlanGridSection = () => {
               <span style={{ fontSize: '11.5px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.4px' }}>Legend:</span>
               {[
                 { bg: '#f0fdf4', border: '#16a34a', color: '#15803d', label: 'Plan — manager-assigned planned hours' },
-                { bg: '#fffbeb', border: '#d97706', color: '#b45309', label: 'Actual — click to edit (editable)' },
-                { bg: '#faf5ff', border: '#9333ea', color: '#7e22ce', label: 'Leave — click to edit (editable)' },
-                { bg: '#fff7ed', border: '#ea580c', color: '#c2410c', label: 'Training — click to edit (editable)' },
+                { bg: '#6b7280', border: '#4b5563', color: '#fff',    label: 'Actual — click to edit (editable)' },
+                { bg: '#9ca3af', border: '#6b7280', color: '#fff',    label: 'Leave — click to edit (editable)' },
+                { bg: '#d1d5db', border: '#9ca3af', color: '#374151', label: 'Training — click to edit (editable)' },
                 { bg: '#fef2f2', border: '#dc2626', color: '#dc2626', label: 'Over-planned (actual > planned)' },
                 { bg: '#f0f9ff', border: '#0284c7', color: '#0284c7', label: 'Wk Hours Cap' },
               ].map((l) => (

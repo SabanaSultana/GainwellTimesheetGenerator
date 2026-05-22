@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   BsPeopleFill, BsArrowClockwise, BsChevronDown, BsChevronUp,
-  BsFolderFill, BsPencilSquare, BsSearch,
+  BsFolderFill, BsPencilSquare, BsSearch, BsBoxArrowUpRight,
 } from 'react-icons/bs';
 import SummaryApi from '../apis/index.jsx';
 
@@ -15,9 +16,9 @@ const EMP_PALETTES = [
 ];
 
 const TYPE_CFG = {
-  actual:   { label: 'Actual',   color: '#d97706', bg: '#fffbeb' },
-  leave:    { label: 'Leave',    color: '#9333ea', bg: '#faf5ff' },
-  training: { label: 'Training', color: '#ea580c', bg: '#fff7ed' },
+  actual:   { label: 'Actual',   color: '#374151', bg: '#f3f4f6', cellBg: '#1f2937', cellText: '#ffffff' },
+  leave:    { label: 'Leave',    color: '#4b5563', bg: '#f3f4f6', cellBg: '#4b5563', cellText: '#ffffff' },
+  training: { label: 'Training', color: '#6b7280', bg: '#f3f4f6', cellBg: '#9ca3af', cellText: '#374151' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -41,18 +42,20 @@ const statusBadge = (logStatus) => {
 const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, saving, saveError, onSave, onClose }) => {
   const cfg = TYPE_CFG[modal.type];
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '14px', padding: '28px 32px', width: '380px', boxShadow: '0 24px 72px rgba(0,0,0,0.22)', border: `2px solid ${cfg.bg}` }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#ffffff', borderRadius: '14px', padding: '28px 32px', width: '390px', boxShadow: '0 24px 72px rgba(0,0,0,0.35)', border: '2px solid #e5e7eb' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-          <BsPencilSquare size={18} color={cfg.color} />
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0e1e3d' }}>Edit {cfg.label} Hours</h3>
+          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: cfg.cellBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <BsPencilSquare size={15} color={cfg.cellText} />
+          </div>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#111827' }}>Edit {cfg.label} Hours</h3>
         </div>
         <p style={{ margin: '0 0 20px', fontSize: '13px', color: '#6b7280' }}>
-          <strong>{modal.empName}</strong> · Week {modal.weekNumber} ({modal.year})
+          <strong style={{ color: '#111827' }}>{modal.empName}</strong> · Week {modal.weekNumber} ({modal.year})
         </p>
 
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {cfg.label} Hours
           </label>
           <input
@@ -60,12 +63,12 @@ const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, sa
             value={editVal}
             onChange={(e) => setEditVal(e.target.value)}
             autoFocus
-            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: `1.5px solid ${cfg.bg}`, outline: 'none', fontSize: '15px', fontWeight: 700, color: cfg.color, boxSizing: 'border-box', background: cfg.bg }}
+            style={{ width: '100%', padding: '11px 13px', borderRadius: '8px', border: `2px solid ${cfg.cellBg}`, outline: 'none', fontSize: '16px', fontWeight: 800, color: cfg.cellBg, boxSizing: 'border-box', background: '#f9fafb' }}
           />
         </div>
 
         <div style={{ marginBottom: '18px' }}>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#374151', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             Justification <span style={{ color: '#dc2626' }}>*</span>
           </label>
           <textarea
@@ -73,7 +76,7 @@ const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, sa
             onChange={(e) => setEditJustify(e.target.value)}
             placeholder="Reason for this update…"
             rows={3}
-            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: '1.5px solid #e5e7eb', outline: 'none', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+            style={{ width: '100%', padding: '10px 13px', borderRadius: '8px', border: '1.5px solid #d1d5db', outline: 'none', fontSize: '13px', resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', color: '#374151' }}
           />
         </div>
 
@@ -82,10 +85,10 @@ const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, sa
         )}
 
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} disabled={saving} style={{ padding: '9px 20px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={onClose} disabled={saving} style={{ padding: '9px 22px', borderRadius: '8px', border: '1.5px solid #d1d5db', background: '#f3f4f6', color: '#374151', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
             Cancel
           </button>
-          <button onClick={onSave} disabled={saving} style={{ padding: '9px 20px', borderRadius: '8px', border: 'none', background: cfg.color, color: '#fff', fontSize: '13px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+          <button onClick={onSave} disabled={saving} style={{ padding: '9px 22px', borderRadius: '8px', border: 'none', background: cfg.cellBg, color: cfg.cellText, fontSize: '13px', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
             {saving ? 'Saving…' : 'Save'}
           </button>
         </div>
@@ -117,6 +120,8 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
   const totalActual    = plans.reduce((s, p) => s + (getVal('actual', p) || 0), 0);
   const submittedWeeks = plans.filter((p) => p.logStatus === 'submitted').length;
   const pendingWeeks   = plans.length - submittedWeeks;
+
+  const totalProgress = sorted.reduce((s, p) => s + (p.progressPercent || 0), 0);
 
   const openEdit = (plan, type) => {
     const cur = getVal(type, plan);
@@ -241,6 +246,7 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
               </button>
             </div>
           </div>
+
         </div>
 
         {/* Weekly table */}
@@ -249,7 +255,7 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '620px' }}>
               <thead>
                 <tr>
-                  {['Year', 'Week No.', 'Wk Cap (h)', 'Planned (h)', 'Actual (h)', 'Leave (h)', 'Training (h)', 'Status'].map((h) => (
+                  {['Year', 'Week No.', 'Wk Cap (h)', 'Planned (h)', 'Actual (h)', 'Leave (h)', 'Training (h)', 'Progress (%)', 'Status'].map((h) => (
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
@@ -268,10 +274,24 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
                     {editableCell('actual',   plan)}
                     {editableCell('leave',    plan)}
                     {editableCell('training', plan)}
+                    <td style={{ ...tdStyle, fontWeight: 700, color: (plan.progressPercent || 0) > 0 ? '#1d4ed8' : '#d1d5db' }}>
+                      {plan.progressPercent > 0 ? `${plan.progressPercent}%` : '—'}
+                    </td>
                     <td style={tdStyle}>{statusBadge(plan.logStatus)}</td>
                   </tr>
                 ))}
               </tbody>
+              <tfoot>
+                <tr style={{ background: '#f0f4ff', borderTop: '2px solid #bfdbfe' }}>
+                  <td colSpan={7} style={{ ...tdStyle, fontWeight: 700, color: '#374151', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: 'none' }}>
+                    Total Progress ({sorted.length} week{sorted.length !== 1 ? 's' : ''})
+                  </td>
+                  <td style={{ ...tdStyle, fontWeight: 800, color: '#1d4ed8', fontSize: '15px', borderBottom: 'none' }}>
+                    {totalProgress}%
+                  </td>
+                  <td style={{ ...tdStyle, borderBottom: 'none' }} />
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}
@@ -282,8 +302,14 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
 
 // ── Employee Section ──────────────────────────────────────────────────────────
 
-const EmployeeSection = ({ employee, projectGroups, palette, idx, onEditSave }) => {
+const EmployeeSection = ({ employee, projectGroups, palette, idx, managerEmpId, onEditSave }) => {
   const [open, setOpen] = useState(true);
+
+  const openTracking = (e) => {
+    e.stopPropagation();
+    if (!managerEmpId || !employee?.employeeId) return;
+    window.open(`/dashboard/manager/${managerEmpId}/track-employee/${employee.employeeId}`, '_blank', 'noopener');
+  };
 
   const projectList = Object.values(projectGroups);
   const totalPlanned = projectList.reduce((s, pg) => s + pg.plans.reduce((a, p) => a + (p.plannedHours || 0), 0), 0);
@@ -309,7 +335,16 @@ const EmployeeSection = ({ employee, projectGroups, palette, idx, onEditSave }) 
             {(employee?.name || '?')[0].toUpperCase()}
           </div>
           <div>
-            <div style={{ fontSize: '15px', fontWeight: 800, color: '#1d4ed8' }}>{employee?.name || 'Unknown'}</div>
+            <div
+              onClick={openTracking}
+              title="Open weekly tracking in a new tab"
+              style={{ fontSize: '15px', fontWeight: 800, color: '#1d4ed8', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', wordBreak: 'break-word', overflowWrap: 'break-word' }}
+              onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}
+            >
+              {employee?.name || 'Unknown'}
+              <BsBoxArrowUpRight size={11} />
+            </div>
             <div style={{ fontSize: '12px', color: palette.headerSub, fontWeight: 500 }}>
               {employee?.employeeId} · {employee?.department}
             </div>
@@ -356,6 +391,7 @@ const EmployeeSection = ({ employee, projectGroups, palette, idx, onEditSave }) 
 // ── Main Section ──────────────────────────────────────────────────────────────
 
 const WeeklyReviewSection = () => {
+  const { employeeId: managerEmpId } = useParams();
   const [plans,       setPlans]       = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState('');
@@ -405,6 +441,7 @@ const WeeklyReviewSection = () => {
   const employees = Object.values(empMap).sort((a, b) =>
     (a.employee?.name || '').localeCompare(b.employee?.name || '')
   );
+
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
@@ -514,6 +551,7 @@ const WeeklyReviewSection = () => {
             projectGroups={emp.projects}
             palette={EMP_PALETTES[idx % EMP_PALETTES.length]}
             idx={idx}
+            managerEmpId={managerEmpId}
             onEditSave={fetchPlans}
           />
         ))

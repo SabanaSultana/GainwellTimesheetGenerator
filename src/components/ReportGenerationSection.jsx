@@ -13,6 +13,7 @@ const ReportGenerationSection = () => {
   const [overrides, setOverrides]           = useState({});
   const [generating, setGenerating]         = useState(false);
   const [error, setError]                   = useState('');
+  const [missingData, setMissingData]       = useState([]);
   const [empSearch, setEmpSearch]           = useState('');
   const printRef = useRef(null);
 
@@ -82,7 +83,7 @@ const ReportGenerationSection = () => {
       return;
     }
 
-    setGenerating(true); setError(''); setReportData(null);
+    setGenerating(true); setError(''); setReportData(null); setMissingData([]);
 
     const plannedProjectsOverrides = {};
     const actualProjectsOverrides  = {};
@@ -99,6 +100,10 @@ const ReportGenerationSection = () => {
       });
       const data = await res.json();
       if (data.success) setReportData(data.data);
+      else if (data.code === 'MISSING_DATA') {
+        setMissingData(data.missing || []);
+        setError('Report not generated — some employees have not filled their data for the selected weeks.');
+      }
       else setError(data.message || 'Report generation failed');
     } catch { setError('Network error. Please try again.'); }
     finally { setGenerating(false); }
@@ -162,6 +167,7 @@ const ReportGenerationSection = () => {
     setReportData(null);
     setOverrides({});
     setError('');
+    setMissingData([]);
     setEmpSearch('');
   };
 
@@ -180,6 +186,23 @@ const ReportGenerationSection = () => {
       {error && (
         <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px' }}>
           {error}
+        </div>
+      )}
+
+      {missingData.length > 0 && (
+        <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: '10px', padding: '14px 18px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#b45309', marginBottom: '10px' }}>
+            Missing weekly data — fill these before generating the report:
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto', overflowX: 'hidden' }}>
+            {missingData.map((m, i) => (
+              <div key={i} style={{ fontSize: '13px', color: '#92400e', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                <strong>{m.name}</strong> ({m.employeeId}) hasn't filled the data for{' '}
+                <strong>{m.projectCode}</strong>
+                {m.projectName ? ` · ${m.projectName}` : ''} — Week {m.weekNumber}, {m.year}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
