@@ -24,6 +24,50 @@ const generateReport = async (req, res) => {
 
     const employees = await User.find({ _id: { $in: allowedIds } }).select('name employeeId department');
 
+    // ── Validation: for every selected week, each employee must have a SUBMITTED
+    // work log for every project they were assigned (have a weekly plan for).
+    // If any assigned project is unfilled, block report generation and report it. ──
+    const missing = [];
+    for (const emp of employees) {
+      for (const { year, weekNumber } of weekSelections) {
+        const y  = Number(year);
+        const wk = Number(weekNumber);
+
+        const plans = await WeeklyPlan
+          .find({ employee: emp._id, year: y, weekNumber: wk })
+          .populate('project', 'projectCode projectName');
+        if (!plans.length) continue; // nothing assigned that week → nothing to fill
+
+        const submittedLogs = await WorkLog.find({ employee: emp._id, year: y, weekNumber: wk, status: 'submitted' });
+        const submittedProjectIds = new Set(submittedLogs.map((l) => l.project.toString()));
+
+        plans
+          .filter((p) => p.project && !submittedProjectIds.has(p.project._id.toString()))
+          .forEach((p) => {
+            missing.push({
+              name:        emp.name,
+              employeeId:  emp.employeeId,
+              year:        y,
+              weekNumber:  wk,
+              projectCode: p.project.projectCode,
+              projectName: p.project.projectName,
+            });
+          });
+      }
+    }
+
+    if (missing.length) {
+      const summary = missing
+        .map((m) => `${m.name} (${m.employeeId}) hasn't filled the data for ${m.projectCode} — Week ${m.weekNumber}, ${m.year}`)
+        .join('; ');
+      return res.status(200).json({
+        success: false,
+        code:    'MISSING_DATA',
+        message: summary,
+        missing,
+      });
+    }
+
     const reportData = await Promise.all(
       employees.map(async (emp) => {
         let totalPlannedHours   = 0;

@@ -72,6 +72,7 @@ const getAllWeeklyPlans = async (req, res) => {
         workedHours:      log.workedHours      || 0,
         trainingHours:    log.trainingHours    || 0,
         leaveHours:       log.leaveHours       || 0,
+        progressPercent:  log.progressPercent  || 0,
         logStatus:        log.status           || 'not submitted',
         totalWeeklyHours: configMap[`${plan.project?._id}-${plan.year}-${plan.weekNumber}`] || 0,
       };
