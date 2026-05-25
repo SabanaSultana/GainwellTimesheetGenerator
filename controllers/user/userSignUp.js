@@ -124,10 +124,13 @@ const userSignUp=async(req,res)=>{
 
     }catch(error){
         console.error("Error in userSignUp:", error)
-        return res.status(500).json(
+        const isValidationError = error.name === 'ValidationError'
+        return res.status(isValidationError ? 400 : 500).json(
             {
                 success:false,
-                message:"Internal Server Error "
+                message: isValidationError
+                    ? Object.values(error.errors).map(e => e.message).join(', ')
+                    : "Internal Server Error"
             }
         )
     }
