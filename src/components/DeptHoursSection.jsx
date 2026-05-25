@@ -6,13 +6,13 @@ import ConfirmModal from './ConfirmModal.jsx';
 const countWords = (text) => text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
 
 const DEPARTMENTS = [
-  'Mechanical and System Integration', 'Virtual Manufacturing', 'Smart Manufacturing',
-  'Electrical and Automation', 'Hydraulic', 'Engineering & System', 'Head of Engineering',
+  'Mechanical', 'Virtual Engineering Manufacturing', 'Lean Manufacturing & Tool Design',
+  'Electrical', 'Hydraulics', 'Digital Tech. & Program Management',
 ];
 
 const DeptHoursSection = ({ projectId }) => {
   const { user } = getAuthUser();
-  const canEdit  = ['Manager(COE)', 'Head of Engineering', 'Admin'].includes(user?.role);
+  const canEdit  = ['Manager(COE)', 'Admin'].includes(user?.role);
 
   const [rows, setRows]           = useState([]);
   const [loading, setLoading]     = useState(true);

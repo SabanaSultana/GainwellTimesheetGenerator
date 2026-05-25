@@ -1,5 +1,5 @@
 const AUTH_KEY = 'auth:session';
-const MANAGER_ROLES = ['Manager(COE)', 'Head of Engineering', 'Admin'];
+const MANAGER_ROLES = ['Manager(COE)', 'Admin'];
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 /**

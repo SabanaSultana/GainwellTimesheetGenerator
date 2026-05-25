@@ -21,7 +21,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
   const { employeeId } = useParams();
   const navigate = useNavigate();
   const { user } = getAuthUser();
-  const canDelete = ['Manager(COE)', 'Head of Engineering', 'Admin'].includes(user?.role);
+  const canDelete = ['Manager(COE)', 'Admin'].includes(user?.role);
 
   const [projects, setProjects]           = useState([]);
   const [loading, setLoading]             = useState(true);

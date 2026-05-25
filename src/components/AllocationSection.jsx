@@ -8,7 +8,7 @@ const countWords = (text) => text.trim() === '' ? 0 : text.trim().split(/\s+/).l
 
 const AllocationSection = ({ projectId }) => {
   const { user } = getAuthUser();
-  const canEdit  = ['Manager(COE)', 'Head of Engineering', 'Admin'].includes(user?.role);
+  const canEdit  = ['Manager(COE)', 'Admin'].includes(user?.role);
 
   // ── Core data ────────────────────────────────────────────────────────────
   const [allocations, setAllocations]     = useState([]);

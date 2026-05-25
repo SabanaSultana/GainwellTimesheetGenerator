@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { BsFileEarmarkSpreadsheet, BsFilePdf, BsPlusCircle, BsTrash, BsXCircle, BsCalendarMonth, BsInfoCircle, BsCheckCircle, BsExclamationTriangle } from 'react-icons/bs';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { BsFileEarmarkSpreadsheet, BsFilePdf, BsPlusCircle, BsTrash, BsXCircle, BsCalendarMonth, BsInfoCircle, BsCheckCircle, BsExclamationTriangle, BsExclamationTriangleFill } from 'react-icons/bs';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import SummaryApi from '../apis/index.jsx';
@@ -59,11 +59,82 @@ const ReportGenerationSection = () => {
   const [monthMsg,      setMonthMsg]        = useState(null); // { type, text, weeks }
   const [addingMonth,   setAddingMonth]     = useState(false);
   const printRef = useRef(null); // kept for Export Excel reference div
+  const [preCheckNoplan,  setPreCheckNoplan]  = useState([]); // { employee, year, weekNumber }
+  const [preCheckMissing, setPreCheckMissing] = useState([]); // plan exists but no actual hours
+  const [preChecking,     setPreChecking]     = useState(false);
 
-  // Flat list sent to the API
-  const weekSelections = yearWeekGroups.flatMap((g) =>
-    [...g.selectedWeeks].sort((a, b) => a - b).map((w) => ({ year: g.year, weekNumber: w }))
+  // Stable flat list of selected week+year pairs
+  const weekSelections = useMemo(() =>
+    yearWeekGroups.flatMap((g) =>
+      [...g.selectedWeeks].sort((a, b) => a - b).map((w) => ({ year: g.year, weekNumber: w }))
+    ),
+    [yearWeekGroups]
   );
+
+  // Live pre-check: differentiate "no plan assigned" from "plan exists but actual not filled"
+  useEffect(() => {
+    if (!selectedEmpIds.length || !weekSelections.length) {
+      setPreCheckNoplan([]); setPreCheckMissing([]);
+      return;
+    }
+    const ctrl  = new AbortController();
+    const timer = setTimeout(async () => {
+      setPreChecking(true);
+      try {
+        const years = [...new Set(weekSelections.map((w) => w.year))];
+        const allPlans = [];
+        await Promise.all(years.map(async (year) => {
+          const res  = await fetch(`${SummaryApi.getAllWeeklyPlans.url}?year=${year}`, { credentials: 'include', signal: ctrl.signal });
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) allPlans.push(...data.data);
+        }));
+
+        // Group plans by empId-year-weekNumber
+        const empWeekMap = {};
+        allPlans.forEach((p) => {
+          const empId = String(p.employee?._id);
+          if (!selectedEmpIds.includes(empId)) return;
+          const key = `${empId}-${p.year}-${p.weekNumber}`;
+          if (!empWeekMap[key]) empWeekMap[key] = { plans: [], employee: p.employee };
+          empWeekMap[key].plans.push(p);
+        });
+
+        const noplan = [];
+        const nofill = [];
+
+        selectedEmpIds.forEach((empId) => {
+          const empUser = allUsers.find((u) => u._id === empId);
+          weekSelections.forEach(({ year, weekNumber }) => {
+            const key   = `${empId}-${year}-${weekNumber}`;
+            const entry = empWeekMap[key];
+            const hasAnyPlan = entry?.plans.some((p) => (p.plannedHours || 0) > 0);
+
+            if (!hasAnyPlan) {
+              // No plan record at all, or all records have 0 planned hours
+              noplan.push({
+                employee: entry?.employee || { _id: empId, name: empUser?.name, employeeId: empUser?.employeeId },
+                year,
+                weekNumber,
+              });
+            } else {
+              // Plan exists — flag any project where actual hours are still 0
+              entry.plans
+                .filter((p) => (p.plannedHours || 0) > 0 && !(p.workedHours > 0))
+                .forEach((p) => nofill.push(p));
+            }
+          });
+        });
+
+        setPreCheckNoplan(noplan);
+        setPreCheckMissing(nofill);
+      } catch (e) {
+        if (e.name !== 'AbortError') { setPreCheckNoplan([]); setPreCheckMissing([]); }
+      } finally {
+        setPreChecking(false);
+      }
+    }, 450);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [selectedEmpIds, weekSelections, allUsers]);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -348,6 +419,8 @@ const ReportGenerationSection = () => {
     setOverrides({});
     setError('');
     setMissingData([]);
+    setPreCheckNoplan([]);
+    setPreCheckMissing([]);
     setEmpSearch('');
     setMonthMsg(null);
     setWeekMode('week');
@@ -372,16 +445,22 @@ const ReportGenerationSection = () => {
       )}
 
       {missingData.length > 0 && (
-        <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: '10px', padding: '14px 18px', marginBottom: '16px' }}>
-          <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#b45309', marginBottom: '10px' }}>
-            Missing weekly data — fill these before generating the report:
+        <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: '10px', padding: '16px 20px', marginBottom: '16px' }}>
+          <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#dc2626', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '16px' }}>⚠</span>
+            Report cannot be generated — actual hours are missing for the following:
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '220px', overflowY: 'auto', overflowX: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '260px', overflowY: 'auto', overflowX: 'hidden' }}>
             {missingData.map((m, i) => (
-              <div key={i} style={{ fontSize: '13px', color: '#92400e', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                <strong>{m.name}</strong> ({m.employeeId}) hasn't filled the data for{' '}
-                <strong>{m.projectCode}</strong>
-                {m.projectName ? ` · ${m.projectName}` : ''} — Week {m.weekNumber}, {m.year}
+              <div key={i} style={{ background: '#fff', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#7f1d1d', wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.7 }}>
+                Please ask{' '}
+                <strong style={{ color: '#dc2626' }}>{m.name}</strong>
+                {m.employeeId ? <span style={{ color: '#9ca3af', fontWeight: 400 }}> ({m.employeeId})</span> : ''}{' '}
+                to fill actual hours for{' '}
+                <strong>Week {m.weekNumber}, {m.year}</strong>
+                {' '}under project{' '}
+                <strong>{m.projectCode}{m.projectName ? ` — ${m.projectName}` : ''}</strong>
+                , else you can't generate the report.
               </div>
             ))}
           </div>
@@ -580,6 +659,64 @@ const ReportGenerationSection = () => {
           )}
         </div>
       </div>
+
+      {/* ── Pre-check: spinning indicator ── */}
+      {preChecking && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '8px', background: '#f9fafb', border: '1px solid #e5e7eb', marginBottom: '16px', fontSize: '13px', color: '#6b7280' }}>
+          <span style={{ width: '14px', height: '14px', border: '2px solid #6b7280', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.7s linear infinite' }} />
+          Checking data…
+          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        </div>
+      )}
+
+      {/* ── Pre-check: no plan assigned ── */}
+      {!preChecking && preCheckNoplan.length > 0 && (
+        <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: '12px', padding: '16px 20px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <BsExclamationTriangle size={15} color="#d97706" />
+            <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#b45309' }}>
+              {preCheckNoplan.length} week{preCheckNoplan.length !== 1 ? 's' : ''} have no plan assigned yet
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', maxHeight: '220px', overflowY: 'auto' }}>
+            {preCheckNoplan.map((item, i) => (
+              <div key={i} style={{ background: '#fff', border: '1px solid #fde68a', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#78350f', lineHeight: 1.7, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                No plan is assigned for{' '}
+                <strong style={{ color: '#b45309' }}>{item.employee?.name || 'this employee'}</strong>
+                {item.employee?.employeeId ? <span style={{ color: '#9ca3af', fontWeight: 400 }}> ({item.employee.employeeId})</span> : ''}{' '}
+                for <strong>Week {item.weekNumber}, {item.year}</strong>.
+                {' '}Please first assign a weekly plan for this employee before generating the report.
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Pre-check: plan exists but actual not filled ── */}
+      {!preChecking && preCheckMissing.length > 0 && (
+        <div style={{ background: '#fef2f2', border: '1.5px solid #fca5a5', borderRadius: '12px', padding: '16px 20px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+            <BsExclamationTriangleFill size={15} color="#dc2626" />
+            <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#dc2626' }}>
+              {preCheckMissing.length} week{preCheckMissing.length !== 1 ? 's' : ''} with no actual hours filled
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', maxHeight: '220px', overflowY: 'auto' }}>
+            {preCheckMissing.map((p, i) => (
+              <div key={i} style={{ background: '#fff', border: '1px solid #fca5a5', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', color: '#7f1d1d', lineHeight: 1.7, wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                Please ask{' '}
+                <strong style={{ color: '#dc2626' }}>{p.employee?.name || 'this employee'}</strong>
+                {p.employee?.employeeId ? <span style={{ color: '#9ca3af', fontWeight: 400 }}> ({p.employee.employeeId})</span> : ''}{' '}
+                to fill actual hours for{' '}
+                <strong>Week {p.weekNumber}, {p.year}</strong>
+                {' '}under project{' '}
+                <strong>{p.project?.projectCode}{p.project?.projectName ? ` — ${p.project.projectName}` : ''}</strong>
+                , else you can't generate the report.
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Planned/Actual Projects Overrides */}
       {selectedEmpIds.length > 0 && (

@@ -49,8 +49,6 @@ export const roles = {
   GEPL8538: "Manager(COE)",
   GEPL8355: "Manager(COE)",
   GEPL7012: "Manager(COE)",
-  GEPL1000: "Head of Engineering",
-
   // Employees
   GEPL0016: "Employee",
   GEPL7988: "Employee",
@@ -81,27 +79,24 @@ export const roles = {
 };
 
 export const departmentByEmployeeId = {
-  GEPL8538: "Mechanical and System Integration",
-  GEPL8355: "Smart Manufacturing",
-  GEPL7012: "Electrical and Automation",
-  GEPL1000: "Engineering & System"
+  GEPL8538: "Mechanical",
+  GEPL8355: "Lean Manufacturing & Tool Design",
+  GEPL7012: "Electrical",
 };
 
 export const roleOptions = [
   "Employee",
   "Manager(COE)",
-  "Head of Engineering",
   "Admin"
 ];
 
 export const departmentOptions = [
-  "Mechanical and System Integration",
-  "Virtual Manufacturing",
-  "Smart Manufacturing",
-  "Electrical and Automation",
-  "Hydraulic",
-  "Engineering & System",
-  "Head of Engineering",
+  "Mechanical",
+  "Virtual Engineering Manufacturing",
+  "Lean Manufacturing & Tool Design",
+  "Electrical",
+  "Hydraulics",
+  "Digital Tech. & Program Management",
 ];
 
 export const managerOptions = [

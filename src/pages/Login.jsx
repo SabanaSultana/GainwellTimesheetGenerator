@@ -113,7 +113,7 @@ const Login = () => {
               ))}
             </ul>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '28px' }}>
-              {['Employee', 'Manager(COE)', 'Head of Engineering', 'Admin'].map((r) => (
+              {['Employee', 'Manager(COE)', 'Admin'].map((r) => (
                 <span key={r} className="auth-chip" style={{ borderColor: 'rgba(91,155,213,0.35)', color: 'rgba(193,221,255,0.85)' }}>{r}</span>
               ))}
             </div>

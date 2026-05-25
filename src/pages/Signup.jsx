@@ -19,15 +19,14 @@ const Signup = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (formData.role === 'Employee' || formData.role === 'Manager(COE)') fetchManagersByRole();
+    if (formData.role === 'Employee') fetchManagersByRole();
     else setManagers([]);
   }, [formData.role]);
 
   const fetchManagersByRole = async () => {
     try {
       setLoadingManagers(true);
-      let roleToFetch = formData.role === 'Employee' ? 'Manager(COE)' : 'Head of Engineering';
-      const response = await fetch(`${SummaryApi.getUsersByRole.url}/${encodeURIComponent(roleToFetch)}`);
+      const response = await fetch(`${SummaryApi.getUsersByRole.url}/${encodeURIComponent('Manager(COE)')}`);
       const data = await response.json();
       setManagers(data.success && data.data?.length > 0 ? data.data : []);
     } catch {
@@ -37,7 +36,7 @@ const Signup = () => {
     }
   };
 
-  const hasManagerDropdown = formData.role === 'Employee' || formData.role === 'Manager(COE)';
+  const hasManagerDropdown = formData.role === 'Employee';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -161,7 +160,7 @@ const Signup = () => {
               ))}
             </ul>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '28px' }}>
-              {['Employee', 'Manager(COE)', 'Head of Engineering', 'Admin'].map((r) => (
+              {['Employee', 'Manager(COE)', 'Admin'].map((r) => (
                 <span key={r} className="auth-chip" style={{ borderColor: 'rgba(91,155,213,0.35)', color: 'rgba(193,221,255,0.85)' }}>{r}</span>
               ))}
             </div>
