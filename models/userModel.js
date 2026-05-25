@@ -25,7 +25,7 @@ const userSchema=new mongoose.Schema(
         },
         role:{
             type:String,
-            enum:['Employee','Manager(COE)','Head of Engineering','Admin'],
+            enum:['Employee','Manager(COE)','Admin'],
             required:true
         },
         managerEmployeeId:{
@@ -35,13 +35,12 @@ const userSchema=new mongoose.Schema(
         department:{
             type:String,
             enum:[
-                'Mechanical and System Integration',
-                'Virtual Manufacturing',
-                'Smart Manufacturing',
-                'Electrical and Automation',
-                'Hydraulic',
-                'Engineering & System',
-                'Head of Engineering'
+                'Mechanical',
+                'Virtual Engineering Manufacturing',
+                'Lean Manufacturing & Tool Design',
+                'Electrical',
+                'Hydraulics',
+                'Digital Tech. & Program Management',
             ],
             required:true
         }
@@ -52,3 +51,5 @@ const userSchema=new mongoose.Schema(
 )
 
 module.exports=mongoose.model('User',userSchema)
+
+// remove head of engineering from everywhere, in signup page for manager(COE) don't show any manager option 

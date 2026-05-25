@@ -83,9 +83,9 @@ const isAdmin=(req,res,next)=>{
     next();
 }
 
-// Allows Manager(COE), Head of Engineering, and Admin
+// Allows Manager(COE) and Admin
 const isManagerLevel = (req, res, next) => {
-  const allowed = ['Manager(COE)', 'Head of Engineering', 'Admin'];
+  const allowed = ['Manager(COE)', 'Admin'];
   if (!allowed.includes(req.user.role)) {
     return res.status(403).json({
       success: false,

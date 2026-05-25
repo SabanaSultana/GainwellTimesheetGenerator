@@ -17,7 +17,7 @@ const userSignUp=async(req,res)=>{
 
         const showPassword = password; // Store the plain password temporarily for response (to be removed in production)
 
-        if ((role === 'Employee' || role === 'Manager(COE)') && !managerEmployeeId) {
+        if (role === 'Employee' && !managerEmployeeId) {
             return res.status(400).json({
                 success:false,
                 message:'Please select a manager for this role'
@@ -59,15 +59,6 @@ const userSignUp=async(req,res)=>{
                 return res.status(400).json({
                     success:false,
                     message:'Selected manager must be a registered Manager(COE)'
-                });
-            }
-        }
-
-        if (role === 'Manager(COE)') {
-            if (!managerRecord || managerRecord.role !== 'Head of Engineering') {
-                return res.status(400).json({
-                    success:false,
-                    message:'Selected manager must be a registered Head of Engineering'
                 });
             }
         }

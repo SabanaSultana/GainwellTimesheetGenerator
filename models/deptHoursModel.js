@@ -1,13 +1,12 @@
 const mongoose = require('mongoose');
 
 const DEPARTMENTS = [
-  'Mechanical and System Integration',
-  'Virtual Manufacturing',
-  'Smart Manufacturing',
-  'Electrical and Automation',
-  'Hydraulic',
-  'Engineering & System',
-  'Head of Engineering',
+  'Mechanical',
+  'Virtual Engineering Manufacturing',
+  'Lean Manufacturing & Tool Design',
+  'Electrical',
+  'Hydraulics',
+  'Digital Tech. & Program Management',
 ];
 
 const deptHoursSchema = new mongoose.Schema(
