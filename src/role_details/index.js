@@ -101,7 +101,7 @@ export const departmentOptions = [
   "Electrical and Automation",
   "Hydraulic",
   "Engineering & System",
-  "Head of Engineering"
+  "Head of Engineering",
 ];
 
 export const managerOptions = [

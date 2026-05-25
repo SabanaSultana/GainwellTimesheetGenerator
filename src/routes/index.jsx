@@ -10,6 +10,7 @@ import EmployeeDashboard       from '../pages/EmployeeDashboard.jsx';
 import CreateProject           from '../components/CreateProject.jsx';
 import ProjectDetailPage       from '../pages/ProjectDetailPage.jsx';
 import EmployeeWeeklyTracking  from '../pages/EmployeeWeeklyTracking.jsx';
+import LauncherPage            from '../pages/LauncherPage.jsx';
 
 /**
  * Route hierarchy:
@@ -45,6 +46,11 @@ const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      // App launcher — protected but outside the main App layout (no Navbar/Footer)
+      {
+        path: '/launcher',
+        element: <LauncherPage />,
+      },
       {
         element: <App />,
         children: [

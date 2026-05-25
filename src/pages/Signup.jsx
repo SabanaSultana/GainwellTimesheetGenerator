@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import SummaryApi from '../apis';
 import { useNavigate } from 'react-router-dom';
 import { roleOptions, departmentOptions } from '../role_details';
-import backgroundImage from '../assets/cm.jpg';
-import logo from '../assets/logo_gainwell_r.png';
+import logo from '../assets/logo_gainwell_main.png';
 import { project_name } from '../config/project';
+import '../styles/portal.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +12,6 @@ const Signup = () => {
     confirmPassword: '', managerEmpId: '', role: '', department: '',
   });
 
-  
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [managers, setManagers] = useState([]);
@@ -100,101 +99,83 @@ const Signup = () => {
     }
   };
 
-  const inputBase = {
+  const errStyle = (field) => errors[field] ? { borderColor: '#f87171', background: '#fff5f5' } : {};
+  const selectStyle = (field) => ({
     width: '100%', borderRadius: '8px', padding: '10px 13px',
     fontSize: '13.5px', outline: 'none', color: '#111827', boxSizing: 'border-box',
-  };
-  const inp = (field) => ({ ...inputBase, border: `1px solid ${errors[field] ? '#f87171' : '#d1d5db'}`, background: errors[field] ? '#fff5f5' : '#fff' });
-  const selectInp = (field) => ({ ...inp(field), appearance: 'auto' });
+    border: `1px solid ${errors[field] ? '#f87171' : '#d1d5db'}`,
+    background: errors[field] ? '#fff5f5' : '#fff',
+    appearance: 'auto',
+  });
 
   return (
-    /* ═══════════════════════════════════════════════
-       PAGE WRAPPER — full-page bg: cm.jpg + overlays
-    ═══════════════════════════════════════════════ */
     <div
       className="min-h-screen relative overflow-hidden"
-      style={{ backgroundImage: `url(${backgroundImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      style={{ background: 'linear-gradient(160deg, #243252 0%, #1e2947 45%, #1b2644 100%)' }}
     >
-      {/* 1. Dark navy overlay */}
-      <div className="absolute inset-0" style={{ background: 'rgba(3, 11, 43, 0.80)' }} />
-
-      {/* 2. Diagonal beam 1 */}
+      {/* Subtle red radial glow — echoes the logo's red ring */}
       <div className="absolute inset-0" style={{
-        background: 'linear-gradient(45deg, transparent 20%, rgba(100,168,255,0.04) 24%, rgba(132,193,255,0.17) 31%, rgba(158,215,255,0.26) 36%, rgba(132,193,255,0.17) 41%, rgba(100,168,255,0.04) 45%, transparent 49%)',
+        background: 'radial-gradient(ellipse at 30% 55%, rgba(198,40,40,0.09) 0%, transparent 55%)',
+        pointerEvents: 'none',
+      }} />
+      {/* Subtle blue radial glow — echoes the logo's wing blue */}
+      <div className="absolute inset-0" style={{
+        background: 'radial-gradient(ellipse at 75% 30%, rgba(91,155,213,0.07) 0%, transparent 50%)',
+        pointerEvents: 'none',
       }} />
 
-      {/* 3. Diagonal beam 2 */}
-      <div className="absolute inset-0" style={{
-        background: 'linear-gradient(45deg, transparent 55%, rgba(85,155,255,0.03) 59%, rgba(115,178,255,0.13) 65%, rgba(130,192,255,0.19) 69%, rgba(115,178,255,0.13) 73%, rgba(85,155,255,0.03) 77%, transparent 81%)',
-      }} />
-
-      
-
-      {/* ═══════════════════════════════════════════════
-          CONTENT
-      ═══════════════════════════════════════════════ */}
       <div className="relative z-10 min-h-screen flex flex-col px-6 py-8 lg:px-28 lg:py-10">
 
-        {/* Logo */}
+        {/* Logo — blends seamlessly: its navy bg matches the page navy */}
         <img
           src={logo}
           alt={project_name}
-          className="object-contain object-left flex-shrink-0 rounded-50"
-          style={{ height: '10vh', width: 'auto' }}
+          className="object-left flex-shrink-0"
+          style={{ height: '72px', width: 'auto', objectFit: 'contain' }}
         />
 
-        {/* Main area: left text + right card */}
+        {/* Main area */}
         <div className="flex-1 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-20 mt-6 pb-6">
 
-          {/* ── LEFT branding text (desktop only) ── */}
+          {/* Left branding */}
           <div className="hidden lg:flex flex-col" style={{ color: '#ffffff', width: '48%', flexShrink: 0 }}>
-
-            <h1 style={{ fontSize: '80px', fontWeight: 900, lineHeight: 1, letterSpacing: '-2px', margin: 0 }}>
-              GAINWELL
+            <h1 style={{ fontSize: '72px', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-1px', margin: 0 }}>
+              ONE<br />ENGINEERING
             </h1>
-
-            <p style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '5px', marginTop: '9px' }}>
-              TIMESHEET GENERATOR, 
-              <span style={{ textTransform: 'uppercase' }} className='text-red-300'>{project_name}</span>
-              
+            <p style={{ fontSize: '14.5px', lineHeight: 1.65, color: 'rgba(193,221,255,0.85)', marginTop: '22px', maxWidth: '400px' }}>
+              Register for secure access to engineering applications, workflow systems, analytics platforms and enterprise collaboration tools.
             </p>
-
-            <p style={{ fontSize: '14.5px', lineHeight: 1.65, color: 'rgba(193,221,255,0.85)', marginTop: '22px', maxWidth: '360px' }}>
-              Your central hub for managing timesheets across teams, years, and milestones — all in one place.
-            </p>
-
             <ul style={{ marginTop: '20px', listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '13px' }}>
               {[
-                'Multi-role timesheet management',
-                'Real-time manager approval workflow',
-                'Department-wise reporting & analytics',
-                'Critical deadline tracking',
+                'NEXUS workflow platform',
+                'DesignWorks collaboration suite',
+                'Role-based engineering access',
+                'Department analytics & reporting',
+                'Cross-functional approval systems',
+                'Operational workflow management',
               ].map((item) => (
-                <li key={item} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'rgba(183,213,255,0.82)' }}>
-                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#4f9cf9', flexShrink: 0 }} />
+                <li key={item} className="auth-feature-item" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: 'rgba(183,213,255,0.82)' }}>
+                  <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#5b9bd5', flexShrink: 0 }} />
                   {item}
                 </li>
               ))}
             </ul>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '28px' }}>
+              {['Employee', 'Manager(COE)', 'Head of Engineering', 'Admin'].map((r) => (
+                <span key={r} className="auth-chip" style={{ borderColor: 'rgba(91,155,213,0.35)', color: 'rgba(193,221,255,0.85)' }}>{r}</span>
+              ))}
+            </div>
           </div>
 
-          {/* ── RIGHT: floating white card ── */}
-          <div
-            className="w-full lg:flex-shrink-0"
-            style={{
-              background: '#ffffff',
-              borderRadius: '20px',
-              boxShadow: '0 28px 72px rgba(0,0,0,0.42)',
-              padding: '36px 40px',
-              maxWidth: '420px',
-            }}
-          >
-            <h2 style={{ fontSize: '26px', fontWeight: 700, color: '#0e1e3d', margin: 0 }}>
-              Create Account
-            </h2>
-            <p style={{ fontSize: '13px', color: '#9ca3af', marginTop: '4px' }}>
-              Register for {project_name}
-            </p>
+          {/* Right card */}
+          <div className="w-full lg:flex-shrink-0 auth-card" style={{ padding: '36px 40px', maxWidth: '420px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <span className="auth-badge" style={{ background: 'rgba(198,40,40,0.10)', border: '1px solid rgba(198,40,40,0.22)', color: '#e57373' }}>
+                CREATE ACCOUNT
+              </span>
+            </div>
+            <h2 className="auth-title">Create Account</h2>
+            <p className="auth-subtitle" style={{ marginTop: '4px' }}>Register for {project_name}</p>
 
             {errors.apiError && (
               <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '10px 13px', borderRadius: '8px', fontSize: '12.5px', marginTop: '14px' }}>
@@ -204,32 +185,31 @@ const Signup = () => {
 
             <form onSubmit={handleSubmit} style={{ marginTop: '22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-              {/* Full Name */}
               <div>
                 <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Full Name</label>
-                <input name="name" value={formData.name} onChange={handleChange} placeholder="Your full name" style={inp('name')} />
+                <input name="name" value={formData.name} onChange={handleChange} placeholder="Your full name"
+                  className="auth-input" style={errStyle('name')} />
                 {errors.name && <p style={{ color: '#ef4444', fontSize: '11.5px', marginTop: '3px' }}>{errors.name}</p>}
               </div>
 
-              {/* Email */}
               <div>
                 <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Email</label>
-                <input name="email" value={formData.email} onChange={handleChange} placeholder="you@gainwellengineering.com" style={inp('email')} />
+                <input name="email" value={formData.email} onChange={handleChange} placeholder="you@gainwellengineering.com"
+                  className="auth-input" style={errStyle('email')} />
                 {errors.email && <p style={{ color: '#ef4444', fontSize: '11.5px', marginTop: '3px' }}>{errors.email}</p>}
               </div>
 
-              {/* Employee ID */}
               <div>
                 <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Employee ID</label>
-                <input name="employeeId" value={formData.employeeId} onChange={handleChange} placeholder="e.g. GEPL0106" style={inp('employeeId')} />
+                <input name="employeeId" value={formData.employeeId} onChange={handleChange} placeholder="e.g. GEPL0106"
+                  className="auth-input" style={errStyle('employeeId')} />
                 {errors.employeeId && <p style={{ color: '#ef4444', fontSize: '11.5px', marginTop: '3px' }}>{errors.employeeId}</p>}
               </div>
 
-              {/* Role + Department (2 col) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Role</label>
-                  <select name="role" value={formData.role} onChange={handleChange} style={selectInp('role')}>
+                  <select name="role" value={formData.role} onChange={handleChange} style={selectStyle('role')}>
                     <option value="">— Select Role —</option>
                     {roleOptions.map((r) => <option key={r} value={r}>{r}</option>)}
                   </select>
@@ -237,7 +217,7 @@ const Signup = () => {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Department</label>
-                  <select name="department" value={formData.department} onChange={handleChange} style={selectInp('department')}>
+                  <select name="department" value={formData.department} onChange={handleChange} style={selectStyle('department')}>
                     <option value="">— Select Dept —</option>
                     {departmentOptions.map((d) => <option key={d} value={d}>{d}</option>)}
                   </select>
@@ -245,7 +225,6 @@ const Signup = () => {
                 </div>
               </div>
 
-              {/* Manager (conditional) */}
               {hasManagerDropdown && (
                 <div>
                   <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Manager</label>
@@ -256,7 +235,7 @@ const Signup = () => {
                       No managers registered yet. Ask your manager to register first.
                     </p>
                   ) : (
-                    <select name="managerEmpId" value={formData.managerEmpId} onChange={handleChange} style={selectInp('managerEmpId')}>
+                    <select name="managerEmpId" value={formData.managerEmpId} onChange={handleChange} style={selectStyle('managerEmpId')}>
                       <option value="">Select Manager</option>
                       {managers.map((m) => <option key={m.employeeId} value={m.employeeId}>{m.name} ({m.employeeId})</option>)}
                     </select>
@@ -265,32 +244,22 @@ const Signup = () => {
                 </div>
               )}
 
-              {/* Password + Confirm (2 col) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Password</label>
-                  <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Min 8 chars" style={inp('password')} />
+                  <input type="password" name="password" value={formData.password} onChange={handleChange}
+                    placeholder="Min 8 chars" className="auth-input" style={errStyle('password')} />
                   {errors.password && <p style={{ color: '#ef4444', fontSize: '11.5px', marginTop: '3px' }}>{errors.password}</p>}
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '13.5px', fontWeight: 600, color: '#1f2937', marginBottom: '6px' }}>Confirm Password</label>
-                  <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="Repeat password" style={inp('confirmPassword')} />
+                  <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange}
+                    placeholder="Repeat password" className="auth-input" style={errStyle('confirmPassword')} />
                   {errors.confirmPassword && <p style={{ color: '#ef4444', fontSize: '11.5px', marginTop: '3px' }}>{errors.confirmPassword}</p>}
                 </div>
               </div>
 
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                style={{
-                  width: '100%', background: loading ? '#7aa0bc' : 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)',
-                  color: '#fff', border: 'none', borderRadius: '8px',
-                  padding: '13px 0', fontSize: '15px', fontWeight: 600,
-                  cursor: loading ? 'not-allowed' : 'pointer', letterSpacing: '0.3px',
-                  marginTop: '4px',
-                }}
-              >
+              <button type="submit" disabled={loading} className="auth-button" style={{ marginTop: '4px' }}>
                 {loading ? 'Creating account…' : 'Create Account →'}
               </button>
 
@@ -298,9 +267,7 @@ const Signup = () => {
 
             <p style={{ textAlign: 'center', fontSize: '13px', color: '#9ca3af', marginTop: '18px' }}>
               Already have an account?{' '}
-              <a href="/login" style={{ color: '#1d4ed8', fontWeight: 700, textDecoration: 'none' }}>
-                Sign in
-              </a>
+              <a href="/login" className="auth-link" style={{ color: '#4a7fc1' }}>Sign in</a>
             </p>
           </div>
 

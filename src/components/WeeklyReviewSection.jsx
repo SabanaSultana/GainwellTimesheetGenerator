@@ -397,8 +397,12 @@ const WeeklyReviewSection = () => {
   const [error,       setError]       = useState('');
   const [empSearch,   setEmpSearch]   = useState('');
   const [projSearch,  setProjSearch]  = useState('');
+  const [weekSearch,  setWeekSearch]  = useState('');
+  const [yearSearch,  setYearSearch]  = useState('');
   const [inputEmp,    setInputEmp]    = useState('');
   const [inputProj,   setInputProj]   = useState('');
+  const [inputWeek,   setInputWeek]   = useState('');
+  const [inputYear,   setInputYear]   = useState('');
 
   const fetchPlans = useCallback(async () => {
     setLoading(true); setError('');
@@ -406,23 +410,27 @@ const WeeklyReviewSection = () => {
       const params = new URLSearchParams();
       if (empSearch)  params.set('employeeName', empSearch);
       if (projSearch) params.set('projectName',  projSearch);
+      if (weekSearch) params.set('weekNumber',   weekSearch);
+      if (yearSearch) params.set('year',         yearSearch);
       const res  = await fetch(`${SummaryApi.getAllWeeklyPlans.url}?${params}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) setPlans(data.data);
       else setError(data.message || 'Failed to load weekly data');
     } catch { setError('Network error. Please try again.'); }
     finally { setLoading(false); }
-  }, [empSearch, projSearch]);
+  }, [empSearch, projSearch, weekSearch, yearSearch]);
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
   const handleSearch = () => {
     setEmpSearch(inputEmp.trim());
     setProjSearch(inputProj.trim());
+    setWeekSearch(inputWeek.trim());
+    setYearSearch(inputYear.trim());
   };
   const handleClearSearch = () => {
-    setInputEmp(''); setInputProj('');
-    setEmpSearch(''); setProjSearch('');
+    setInputEmp(''); setInputProj(''); setInputWeek(''); setInputYear('');
+    setEmpSearch(''); setProjSearch(''); setWeekSearch(''); setYearSearch('');
   };
 
   // Group by employee → project
@@ -471,7 +479,7 @@ const WeeklyReviewSection = () => {
       <div style={{ background: 'linear-gradient(135deg,#f5f3ff,#ede9fe)', border: '1.5px solid #ddd6fe', borderRadius: '14px', padding: '16px 20px', marginBottom: '24px' }}>
         <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Filter</p>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: '280px' }}>
+          <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: '240px' }}>
             <BsSearch size={12} color="#9ca3af" style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
@@ -482,7 +490,7 @@ const WeeklyReviewSection = () => {
               style={{ width: '100%', padding: '9px 12px 9px 30px', borderRadius: '8px', border: '1.5px solid #ddd6fe', outline: 'none', fontSize: '13px', background: '#fff', boxSizing: 'border-box' }}
             />
           </div>
-          <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: '280px' }}>
+          <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: '240px' }}>
             <BsSearch size={12} color="#9ca3af" style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)' }} />
             <input
               type="text"
@@ -493,13 +501,31 @@ const WeeklyReviewSection = () => {
               style={{ width: '100%', padding: '9px 12px 9px 30px', borderRadius: '8px', border: '1.5px solid #ddd6fe', outline: 'none', fontSize: '13px', background: '#fff', boxSizing: 'border-box' }}
             />
           </div>
+          <input
+            type="number"
+            placeholder="Week No."
+            min="1" max="53"
+            value={inputWeek}
+            onChange={(e) => setInputWeek(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+            style={{ width: '100px', padding: '9px 12px', borderRadius: '8px', border: '1.5px solid #ddd6fe', outline: 'none', fontSize: '13px', background: '#fff', boxSizing: 'border-box' }}
+          />
+          <input
+            type="number"
+            placeholder="Year"
+            min="2020" max="2099"
+            value={inputYear}
+            onChange={(e) => setInputYear(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+            style={{ width: '100px', padding: '9px 12px', borderRadius: '8px', border: '1.5px solid #ddd6fe', outline: 'none', fontSize: '13px', background: '#fff', boxSizing: 'border-box' }}
+          />
           <button
             onClick={handleSearch}
             style={{ padding: '9px 18px', borderRadius: '8px', border: 'none', background: '#7c3aed', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
           >
             Search
           </button>
-          {(inputEmp || inputProj) && (
+          {(inputEmp || inputProj || inputWeek || inputYear) && (
             <button
               onClick={handleClearSearch}
               style={{ padding: '9px 14px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#6b7280', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}

@@ -1,5 +1,5 @@
 const AUTH_KEY = 'auth:session';
-const MANAGER_ROLES = ['Manager(COE)', 'Head of Engineering'];
+const MANAGER_ROLES = ['Manager(COE)', 'Head of Engineering', 'Admin'];
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
@@ -101,8 +101,17 @@ export function isManagerRole(role) {
 
 /**
  * Builds the correct dashboard URL for a given user object.
+ * After login users always go to the app launcher first.
  */
 export function getDashboardPath(user) {
+  if (!user?.employeeId) return '/login';
+  return '/launcher';
+}
+
+/**
+ * Direct dashboard path (bypasses launcher) — used internally for role-guarded redirects.
+ */
+export function getDirectDashboardPath(user) {
   if (!user?.employeeId) return '/login';
   return isManagerRole(user.role)
     ? `/dashboard/manager/${user.employeeId}`

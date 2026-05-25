@@ -67,10 +67,15 @@ const Navbar = () => {
     >
       {/* Left: Logo + brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <img src={logo} alt={project_name} style={{ height: '44px', width: 'auto' }} />
-        <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '21px', letterSpacing: '0.3px' }}>
-          {project_name}
-        </span>
+        <img src={logo} alt="ONE ENGINEERING" style={{ height: '44px', width: 'auto', mixBlendMode: 'screen' }} />
+        <div>
+          <div style={{ color: '#ffffff', fontWeight: 700, fontSize: '17px', letterSpacing: '0.3px', lineHeight: 1.2 }}>
+            {project_name}
+          </div>
+          <div style={{ color: 'rgba(193,221,255,0.7)', fontSize: '11px', fontWeight: 400, letterSpacing: '0.2px' }}>
+            Unified Engineering Workspace
+          </div>
+        </div>
       </div>
 
       {/* Right: User info + Logout */}
@@ -80,8 +85,8 @@ const Navbar = () => {
             <p style={{ color: '#ffffff', fontSize: '16px', fontWeight: 700, margin: 0, lineHeight: 1.3 }}>
               {user.name}
             </p>
-            <p style={{ color: 'rgba(193,221,255,0.8)', fontSize: '13px', margin: 0, lineHeight: 1.3 }}>
-              {user.role}
+            <p style={{ color: 'rgba(193,221,255,0.8)', fontSize: '12.5px', margin: 0, lineHeight: 1.3 }}>
+              {user.role}{user.department ? ` · ${user.department}` : ''}
             </p>
           </div>
         )}

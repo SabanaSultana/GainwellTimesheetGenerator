@@ -173,7 +173,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
                 <th style={thStyle}>Start Date</th>
                 <th style={thStyle}>End Date</th>
                 <th style={{ ...thStyle, textAlign: 'center' }} title="Total planned hours across all employees, all weeks">Total Project Hrs (h)</th>
-                <th style={{ ...thStyle, textAlign: 'center' }} title="Planned hours for employees in your department up to today">Dept Till Now (h)</th>
+                <th style={{ ...thStyle, textAlign: 'center' }} title="Planned hours for employees in your department up to today">Departmental Total</th>
                 <th style={thStyle}>Created By</th>
                 <th style={thStyle}>Last Updated</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Actions</th>

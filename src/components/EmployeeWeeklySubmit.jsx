@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BsClipboardCheck, BsSearch, BsPlusCircle,
   BsCheckCircle, BsFolderFill, BsX, BsClock, BsExclamationTriangle,
-  BsArrowDownUp, BsExclamationOctagon,
+  BsArrowDownUp, BsExclamationOctagon, BsFilePdf,
 } from 'react-icons/bs';
 import SummaryApi from '../apis/index.jsx';
 
@@ -337,6 +337,33 @@ const ProjectCard = ({ project, paletteIdx }) => {
   const [weekSort,   setWeekSort]   = useState('yr-wk-asc');
   const [editKey,    setEditKey]    = useState(null);
   const [collapsed,  setCollapsed]  = useState(false);
+  const printRef = useRef(null);
+
+  const downloadPdf = () => {
+    if (!printRef.current) return;
+    const win = window.open('', '_blank');
+    win.document.write(`
+      <html><head><title>Timesheet – ${project.project?.projectCode}</title>
+      <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; margin: 20px; color: #1f2937; }
+        h2   { font-size: 16px; font-weight: 700; color: #0e1e3d; margin: 0 0 4px; }
+        p    { margin: 0 0 14px; font-size: 12px; color: #6b7280; }
+        table{ border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th   { background: #1d4ed8; color: #fff; padding: 8px 10px; font-size: 11px; text-align: left; white-space: nowrap; }
+        td   { border: 1px solid #e5e7eb; padding: 7px 10px; text-align: left; }
+        tr:nth-child(even) td { background: #f8faff; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-weight: 700; font-size: 11px; }
+        .submitted { background: #dcfce7; color: #16a34a; }
+        .pending   { background: #fef3c7; color: #d97706; }
+      </style>
+      </head><body>
+        <h2>${project.project?.projectCode} — ${project.project?.projectName}</h2>
+        <p>${fmt(project.project?.startDate)} – ${fmt(project.project?.endDate)} &nbsp;|&nbsp; ${project.department || ''}</p>
+        ${printRef.current.innerHTML}
+      </body></html>`);
+    win.document.close();
+    setTimeout(() => { win.print(); win.close(); }, 300);
+  };
 
   const fetchEntries = useCallback(async () => {
     setLoading(true); setError('');
@@ -432,9 +459,15 @@ const ProjectCard = ({ project, paletteIdx }) => {
                 {WEEK_SORTS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
-            <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#9ca3af' }}>
+            <span style={{ fontSize: '13px', color: '#9ca3af' }}>
               {sorted.length} entr{sorted.length !== 1 ? 'ies' : 'y'}
             </span>
+            <button
+              onClick={downloadPdf}
+              style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1.5px solid #fca5a5', background: '#fef2f2', color: '#dc2626', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              <BsFilePdf size={14} /> Download PDF
+            </button>
           </div>
 
           {loading ? (
@@ -451,7 +484,7 @@ const ProjectCard = ({ project, paletteIdx }) => {
               {weekSearch ? 'No entries match your search.' : 'No weekly plans set for this project yet.'}
             </div>
           ) : (
-            <div style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid #f0f0f0' }}>
+            <div ref={printRef} style={{ overflowX: 'auto', borderRadius: '10px', border: '1px solid #f0f0f0' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '820px' }}>
                 <thead>
                   <tr>

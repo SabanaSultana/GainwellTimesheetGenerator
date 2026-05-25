@@ -7,10 +7,11 @@ const EmployeeWeeklyTracking = () => {
   const { employeeId: managerEmpId, targetEmpId } = useParams();
   const navigate = useNavigate();
 
-  const [employee,    setEmployee]    = useState(null);
-  const [weeklyData,  setWeeklyData]  = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState('');
+  const [employee,      setEmployee]      = useState(null);
+  const [weeklyData,    setWeeklyData]    = useState([]);
+  const [loading,       setLoading]       = useState(true);
+  const [error,         setError]         = useState('');
+  const [projectPopup,  setProjectPopup]  = useState(null); // { code, name }
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -96,7 +97,7 @@ const EmployeeWeeklyTracking = () => {
 
       {/* ── Back button ── */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => navigate(`/dashboard/manager/${managerEmpId}`)}
         style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '9px 18px', borderRadius: '9px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: '14px', fontWeight: 600, cursor: 'pointer', marginBottom: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.07)' }}
       >
         <BsArrowLeft size={16} /> Back to Team
@@ -192,7 +193,12 @@ const EmployeeWeeklyTracking = () => {
                     <td style={tdStyle}>
                       <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                         {w.projects.map((p, pi) => (
-                          <span key={pi} style={{ background: p.status === 'submitted' ? '#f0fdf4' : '#f3f4f6', color: p.status === 'submitted' ? '#16a34a' : '#6b7280', border: `1px solid ${p.status === 'submitted' ? '#bbf7d0' : '#e5e7eb'}`, padding: '2px 8px', borderRadius: '10px', fontSize: '11.5px', fontWeight: 600 }}>
+                          <span
+                            key={pi}
+                            title={p.name || p.code}
+                            onClick={() => setProjectPopup({ code: p.code, name: p.name })}
+                            style={{ background: p.status === 'submitted' ? '#f0fdf4' : '#f3f4f6', color: p.status === 'submitted' ? '#16a34a' : '#6b7280', border: `1px solid ${p.status === 'submitted' ? '#bbf7d0' : '#e5e7eb'}`, padding: '2px 8px', borderRadius: '10px', fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline dotted' }}
+                          >
                             {p.code}
                           </span>
                         ))}
@@ -212,6 +218,32 @@ const EmployeeWeeklyTracking = () => {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+      {/* ── Project popup ── */}
+      {projectPopup && (
+        <div
+          onClick={() => setProjectPopup(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: '14px', padding: '28px 36px', boxShadow: '0 16px 48px rgba(0,0,0,0.2)', border: '1.5px solid #dde7ff', minWidth: '280px', textAlign: 'center' }}
+          >
+            <p style={{ margin: '0 0 10px', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Project Details</p>
+            <span style={{ display: 'inline-block', background: '#eff6ff', color: '#1d4ed8', padding: '4px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 800, marginBottom: '10px' }}>
+              {projectPopup.code}
+            </span>
+            <p style={{ margin: '0 0 20px', fontSize: '16px', fontWeight: 700, color: '#0e1e3d', wordBreak: 'break-word' }}>
+              {projectPopup.name || '—'}
+            </p>
+            <button
+              onClick={() => setProjectPopup(null)}
+              style={{ padding: '8px 24px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#f3f4f6', color: '#374151', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
