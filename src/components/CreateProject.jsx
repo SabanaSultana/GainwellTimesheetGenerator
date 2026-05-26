@@ -22,7 +22,7 @@ const generateNextCode = (codes) => {
 
 // embedded=true  → rendered inside ManagerDashboard tab (no outer wrapper)
 // embedded=false → standalone protected page at /create-project
-const CreateProject = ({ embedded = false, onSuccess }) => {
+const CreateProject = ({ embedded = false, onSuccess, refreshKey = 0 }) => {
   const [formData, setFormData] = useState({
     projectCode: '', projectName: '', projectDescription: '', startDate: '', endDate: '',
   });
@@ -56,6 +56,7 @@ const CreateProject = ({ embedded = false, onSuccess }) => {
   }, []);
 
   useEffect(() => { fetchNextCode(); }, [fetchNextCode]);
+  useEffect(() => { if (refreshKey > 0) fetchNextCode(); }, [refreshKey]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleChange = (e) => {

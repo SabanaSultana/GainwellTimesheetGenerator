@@ -41,6 +41,7 @@ const ManagerDashboard = () => {
 
   const [activeKey, setActiveKey] = useState(tabs[0].key);
   const [projectsVersion, setProjectsVersion] = useState(0);
+  const [createVersion, setCreateVersion] = useState(0);
 
   const handleProjectCreated = () => setProjectsVersion((v) => v + 1);
 
@@ -142,7 +143,11 @@ const ManagerDashboard = () => {
           return (
             <button
               key={key}
-              onClick={() => setActiveKey(key)}
+              onClick={() => {
+                setActiveKey(key);
+                if (key === 'showProjects')  setProjectsVersion((v) => v + 1);
+                if (key === 'createProject') setCreateVersion((v) => v + 1);
+              }}
               style={{
                 display: 'flex', alignItems: 'center', gap: '7px',
                 padding: '10px 20px',
@@ -167,7 +172,7 @@ const ManagerDashboard = () => {
 
       {/* ── Content panel — always mounted, hidden with display:none to preserve state ── */}
       <div style={{ display: activeKey === 'createProject' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-        <CreateProject embedded onSuccess={handleProjectCreated} />
+        <CreateProject embedded onSuccess={handleProjectCreated} refreshKey={createVersion} />
       </div>
       <div style={{ display: activeKey === 'showProjects' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
         <ProjectsTable refreshKey={projectsVersion} />

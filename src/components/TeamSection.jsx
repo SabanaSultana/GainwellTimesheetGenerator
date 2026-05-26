@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BsPeopleFill, BsFolderFill, BsSearch, BsChevronDown, BsChevronUp, BsEnvelope, BsGraphUp } from 'react-icons/bs';
 import SummaryApi from '../apis/index.jsx';
 
-const TeamSection = () => {
+const TeamSection = ({ refreshKey = 0 }) => {
   const navigate              = useNavigate();
   const { employeeId }        = useParams(); // manager's employeeId from URL
   const [members,  setMembers]  = useState([]);
