@@ -136,7 +136,7 @@ const StatChip = ({ label, value, color, bg }) => (
   </div>
 );
 
-const EmployeeProjectsView = () => {
+const EmployeeProjectsView = ({ refreshKey = 0 }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
@@ -153,7 +153,7 @@ const EmployeeProjectsView = () => {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchProjects(); }, [fetchProjects]);
+  useEffect(() => { fetchProjects(); }, [fetchProjects, refreshKey]);
 
   if (loading) {
     return (

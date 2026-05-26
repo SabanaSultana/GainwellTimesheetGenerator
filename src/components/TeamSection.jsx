@@ -23,7 +23,7 @@ const TeamSection = ({ refreshKey = 0 }) => {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchTeam(); }, [fetchTeam]);
+  useEffect(() => { fetchTeam(); }, [fetchTeam, refreshKey]);
 
   const filtered = members.filter((m) => {
     if (!search) return true;

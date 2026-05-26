@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SummaryApi from '../apis/index.jsx';
 
-const EmployeeHoursHistory = () => {
+const EmployeeHoursHistory = ({ refreshKey = 0 }) => {
   const [weeklyData, setWeeklyData] = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState('');
@@ -59,7 +59,7 @@ const EmployeeHoursHistory = () => {
       finally { setLoading(false); }
     };
     fetchAll();
-  }, []);
+  }, [refreshKey]);
 
   const totals = weeklyData.reduce(
     (acc, w) => ({

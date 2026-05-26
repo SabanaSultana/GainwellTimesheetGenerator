@@ -216,7 +216,7 @@ const CalendarWidget = ({ year, month, projectStartDate, projectEndDate, selecte
 };
 
 // ── Main Component ─────────────────────────────────────────────────────────────
-const AddWeeklyPlanSection = () => {
+const AddWeeklyPlanSection = ({ refreshKey = 0 }) => {
   const [projects,          setProjects]          = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [plans,             setPlans]             = useState([]);
@@ -273,12 +273,12 @@ const AddWeeklyPlanSection = () => {
   const { workingDays = null, evenSat = false } = breakdown ?? {};
   const autoCapacity = workingDays != null ? workingDays * 8 : null;
 
-  // Fetch projects
+  // Fetch projects — re-runs each time the Add Weekly Plan tab is clicked
   useEffect(() => {
     fetch(SummaryApi.getProjects.url, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => { if (data.success) setProjects(data.data); });
-  }, []);
+  }, [refreshKey]);
 
   // Fetch team members
   useEffect(() => {
@@ -289,19 +289,42 @@ const AddWeeklyPlanSection = () => {
       .finally(() => setLoadingTeam(false));
   }, []);
 
-  // Fetch plan records for selected project
-  const fetchPlans = useCallback(async () => {
+  // Fetch plan records for selected project. Pass silent=true to skip the loading skeleton (e.g. after inline edits).
+  const fetchPlans = useCallback(async (silent = false) => {
     if (!selectedProjectId) { setPlans([]); return; }
-    setPlansLoading(true);
+    if (!silent) setPlansLoading(true);
     try {
       const res  = await fetch(`${SummaryApi.getWeeklyPlans.url}/${selectedProjectId}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) setPlans(data.data);
     } catch { /* silent */ }
-    finally { setPlansLoading(false); }
+    finally { if (!silent) setPlansLoading(false); }
   }, [selectedProjectId]);
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
+
+  // Auto-refresh plan records every 30 s (silent) when a project is selected,
+  // so employee log submissions appear without the manager manually clicking Refresh.
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    const id = setInterval(() => fetchPlans(true), 30000);
+    return () => clearInterval(id);
+  }, [selectedProjectId, fetchPlans]);
+
+  // Also re-fetch instantly whenever the browser tab becomes visible again.
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchPlans(true); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [selectedProjectId, fetchPlans]);
+
+  // Auto-dismiss saveMsg after 5 seconds
+  useEffect(() => {
+    if (!saveMsg) return;
+    const t = setTimeout(() => setSaveMsg(null), 5000);
+    return () => clearTimeout(t);
+  }, [saveMsg]);
 
   // When project changes, navigate calendar to project start
   useEffect(() => {
@@ -408,7 +431,9 @@ const AddWeeklyPlanSection = () => {
       if (res.ok && data.success) {
         setSaveMsg({ type: data.configExists ? 'warning' : 'success', text: data.message });
         setJustification('');
-        await Promise.all([checkExistingConfig(), fetchPlans()]);
+        await Promise.all([checkExistingConfig(), fetchPlans(true)]);
+        // Clear employee selection after 5 s (matches saveMsg dismissal)
+        setTimeout(() => { setSelectedEmployees([]); setEmployeeHours({}); }, 5000);
       } else {
         setSaveMsg({ type: 'error', text: data.message || 'Failed to save plan' });
       }
@@ -426,17 +451,28 @@ const AddWeeklyPlanSection = () => {
 
   const handleInlineEdit = async (plan) => {
     if (!editTarget) return;
+
+    const newHours = Number(editTarget.plannedHours);
+    const weekCap  = plan.totalWeeklyHours || 0;
+
+    // Reject immediately on the client if the new value exceeds the weekly cap
+    if (weekCap > 0 && newHours > weekCap) {
+      setSaveMsg({ type: 'error', text: `Planned hours (${newHours}h) exceed the weekly cap of ${weekCap}h. Previous value restored.` });
+      setEditTarget(null);
+      return;
+    }
+
     setSaving(true);
     try {
       const res  = await fetch(SummaryApi.bulkUpsertWeeklyPlan.url, {
         method: 'POST', credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          projectId: plan.project?._id,
+          projectId: selectedProjectId,
           year: plan.year,
           weekNumber: plan.weekNumber,
           totalWeeklyHours: plan.totalWeeklyHours || 0,
-          employees: [{ employeeUserId: plan.employee?._id, plannedHours: Number(editTarget.plannedHours) }],
+          employees: [{ employeeUserId: plan.employee?._id, plannedHours: newHours }],
           justification: editTarget.justification || `Updated plan for FY week ${plan.weekNumber}/${plan.year}`,
         }),
       });
@@ -444,11 +480,16 @@ const AddWeeklyPlanSection = () => {
       if (res.ok && data.success) {
         setSaveMsg({ type: 'success', text: 'Planned hours updated.' });
         setEditTarget(null);
-        await fetchPlans();
+        await fetchPlans(true);
       } else {
-        setSaveMsg({ type: 'error', text: data.message || 'Update failed' });
+        // Backend rejected (e.g. cross-project cap exceeded) — cancel edit, restore previous value
+        setSaveMsg({ type: 'error', text: data.message || 'Update failed. Previous value restored.' });
+        setEditTarget(null);
       }
-    } catch { setSaveMsg({ type: 'error', text: 'Network error' }); }
+    } catch {
+      setSaveMsg({ type: 'error', text: 'Network error. Previous value restored.' });
+      setEditTarget(null);
+    }
     finally { setSaving(false); }
   };
 
@@ -583,7 +624,7 @@ const AddWeeklyPlanSection = () => {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {selectedProjectId && (
-            <button onClick={fetchPlans} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => fetchPlans()} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: '1.5px solid #e5e7eb', background: '#fff', color: '#374151', fontSize: '12.5px', fontWeight: 600, cursor: 'pointer' }}>
               <BsArrowClockwise size={13} /> Refresh
             </button>
           )}
@@ -760,12 +801,6 @@ const AddWeeklyPlanSection = () => {
                 )}
 
                 {checkingConfig && <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '12px' }}>Checking existing plan…</div>}
-                {!checkingConfig && existingConfig && week && (
-                  <div style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#92400e', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <BsExclamationTriangle size={14} />
-                    Weekly plan already exists for FY Wk {week} / FY {fyYear}. Saving will update existing data.
-                  </div>
-                )}
 
                 {/* Step 4 — Weekly Hours Cap */}
                 <div style={{ marginBottom: '16px', maxWidth: '260px' }}>
@@ -990,7 +1025,7 @@ const AddWeeklyPlanSection = () => {
                               )}
                             </td>
                             <td style={{ ...tdStyle, color: '#16a34a', fontWeight: 600 }}>
-                              {plan.workedHours > 0 ? plan.workedHours : <span style={{ color: '#d1d5db' }}>—</span>}
+                              {plan.workedHours != null ? plan.workedHours : <span style={{ color: '#d1d5db' }}>—</span>}
                             </td>
                             <td style={{ ...tdStyle, color: plan.leaveHours > 0 ? '#9333ea' : '#6b7280' }}>
                               {plan.leaveHours != null ? plan.leaveHours : <span style={{ color: '#d1d5db' }}>—</span>}
@@ -1002,7 +1037,7 @@ const AddWeeklyPlanSection = () => {
                               {plan.progressPercent != null ? `${plan.progressPercent}%` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>—</span>}
                             </td>
                             <td style={{ ...tdStyle, fontWeight: 600, color: '#0369a1' }}>
-                              {plan.totalWeeklyHours > 0 ? plan.totalWeeklyHours : <span style={{ color: '#d1d5db' }}>—</span>}
+                              {plan.totalWeeklyHours != null ? plan.totalWeeklyHours : <span style={{ color: '#d1d5db' }}>—</span>}
                             </td>
                             <td style={tdStyle}>
                               <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, background: plan.logStatus === 'submitted' ? '#dcfce7' : plan.plannedHours > 0 ? '#eff6ff' : '#f3f4f6', color: plan.logStatus === 'submitted' ? '#16a34a' : plan.plannedHours > 0 ? '#1d4ed8' : '#9ca3af' }}>

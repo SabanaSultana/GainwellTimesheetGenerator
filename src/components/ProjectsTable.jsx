@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BsSearch, BsClockHistory, BsPencil, BsTrash } from 'react-icons/bs';
+import { BsSearch, BsClockHistory, BsPencil, BsTrash, BsBoxArrowUpRight } from 'react-icons/bs';
 import { getAuthUser } from '../utils/auth';
 import SummaryApi from '../apis/index.jsx';
 import EditProjectModal from './EditProjectModal.jsx';
@@ -194,7 +194,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
                 <th style={thStyle}>Start Date</th>
                 <th style={thStyle}>End Date</th>
                 <th style={{ ...thStyle, textAlign: 'center' }} title="Total planned hours across all employees, all weeks">Total Project Hrs (h)</th>
-                <th style={{ ...thStyle, textAlign: 'center' }} title="Planned hours for employees in your department up to today">Departmental Total</th>
+                <th style={{ ...thStyle, textAlign: 'center' }} title="Total planned hours allocated by your department's team to this project">Dept Planned (h)</th>
                 <th style={thStyle}>Created By</th>
                 <th style={thStyle}>Last Updated</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Actions</th>
@@ -204,7 +204,8 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
               {sorted.map((p, idx) => (
                 <tr
                   key={p._id}
-                  style={{ background: idx % 2 === 0 ? '#ffffff' : '#fafafa', transition: 'background 0.12s' }}
+                  onClick={() => navigate(`/dashboard/manager/${employeeId}/project/${p._id}`)}
+                  style={{ background: idx % 2 === 0 ? '#ffffff' : '#fafafa', transition: 'background 0.12s', cursor: 'pointer' }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f4ff')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? '#ffffff' : '#fafafa')}
                 >
@@ -214,7 +215,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
                     </span>
                   </td>
                   <td style={{ ...tdStyle, fontWeight: 600, color: '#0e1e3d', maxWidth: '180px' }}>{p.projectName}</td>
-                  <td style={{ ...tdStyle, color: '#6b7280', maxWidth: '160px', overflow: 'hidden' }}>
+                  <td style={{ ...tdStyle, color: '#6b7280', maxWidth: '160px', overflow: 'hidden' }} onClick={(e) => e.stopPropagation()}>
                     <span
                       onClick={() => p.projectDescription && setTextPopup(p.projectDescription)}
                       style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: p.projectDescription ? 'pointer' : 'default', textDecoration: p.projectDescription ? 'underline dotted #9ca3af' : 'none' }}
@@ -230,8 +231,8 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
                     </span>
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
-                    <span style={{ fontWeight: 700, color: p.deptTillNowHrs > 0 ? '#1d4ed8' : '#9ca3af' }}>
-                      {p.deptTillNowHrs > 0 ? p.deptTillNowHrs : '—'}
+                    <span style={{ fontWeight: 700, color: p.deptPlannedHrs > 0 ? '#1d4ed8' : '#9ca3af' }}>
+                      {p.deptPlannedHrs > 0 ? p.deptPlannedHrs : '—'}
                     </span>
                   </td>
                   <td style={{ ...tdStyle, fontSize: '12.5px' }}>
@@ -247,14 +248,21 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
                       ? <div><div style={{ color: '#374151', fontWeight: 600 }}>{p.lastModifiedBy.name}</div><div>{fmt(p.updatedAt)}</div></div>
                       : fmt(p.createdAt)}
                   </td>
-                  <td style={{ ...tdStyle, textAlign: 'center' }}>
+                  <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <button
+                        title="View project details"
+                        onClick={() => navigate(`/dashboard/manager/${employeeId}/project/${p._id}`)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+                      >
+                        <BsBoxArrowUpRight size={12} /> View
+                      </button>
                       <button
                         title="View justification history"
                         onClick={() => setJustificationTarget(p)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: '1.5px solid #e5e7eb', background: '#ffffff', color: '#374151', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
                       >
-                        <BsClockHistory size={13} /> See Justification
+                        <BsClockHistory size={13} /> History
                       </button>
                       <button
                         title="Edit project"

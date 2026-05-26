@@ -42,6 +42,10 @@ const ManagerDashboard = () => {
   const [activeKey, setActiveKey] = useState(tabs[0].key);
   const [projectsVersion, setProjectsVersion] = useState(0);
   const [createVersion, setCreateVersion] = useState(0);
+  const [addPlanVersion, setAddPlanVersion] = useState(0);
+  const [planGridVersion, setPlanGridVersion] = useState(0);
+  const [weeklyReviewVersion, setWeeklyReviewVersion] = useState(0);
+  const [teamVersion, setTeamVersion] = useState(0);
 
   const handleProjectCreated = () => setProjectsVersion((v) => v + 1);
 
@@ -147,6 +151,10 @@ const ManagerDashboard = () => {
                 setActiveKey(key);
                 if (key === 'showProjects')  setProjectsVersion((v) => v + 1);
                 if (key === 'createProject') setCreateVersion((v) => v + 1);
+                if (key === 'addPlan')       setAddPlanVersion((v) => v + 1);
+                if (key === 'planGrid')      setPlanGridVersion((v) => v + 1);
+                if (key === 'weeklyReview') setWeeklyReviewVersion((v) => v + 1);
+                if (key === 'team')         setTeamVersion((v) => v + 1);
               }}
               style={{
                 display: 'flex', alignItems: 'center', gap: '7px',
@@ -178,16 +186,16 @@ const ManagerDashboard = () => {
         <ProjectsTable refreshKey={projectsVersion} />
       </div>
       <div style={{ display: activeKey === 'team' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
-        <TeamSection />
+        <TeamSection refreshKey={teamVersion} />
       </div>
       <div style={{ display: activeKey === 'addPlan' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
-        <AddWeeklyPlanSection />
+        <AddWeeklyPlanSection refreshKey={addPlanVersion} />
       </div>
       <div style={{ display: activeKey === 'planGrid' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
-        <PlanGridSection />
+        <PlanGridSection refreshKey={planGridVersion} />
       </div>
       <div style={{ display: activeKey === 'weeklyReview' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
-        <WeeklyReviewSection />
+        <WeeklyReviewSection refreshKey={weeklyReviewVersion} />
       </div>
       <div style={{ display: activeKey === 'report' ? 'block' : 'none', background: '#ffffff', borderRadius: '14px', padding: '28px 32px', boxShadow: '0 2px 14px rgba(0,0,0,0.07)' }}>
         <ReportGenerationSection />

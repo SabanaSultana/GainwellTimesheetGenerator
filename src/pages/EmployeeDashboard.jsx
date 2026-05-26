@@ -25,7 +25,9 @@ const EmployeeDashboard = () => {
   const user      = session?.user;
   const firstName = user?.name?.split(' ')[0] ?? '';
 
-  const [activeKey, setActiveKey] = useState(tabs[0].key);
+  const [activeKey,        setActiveKey]        = useState(tabs[0].key);
+  const [weeklyRefreshKey, setWeeklyRefreshKey] = useState(0);
+  const [logRefreshKey,    setLogRefreshKey]    = useState(0);
 
   return (
     <div
@@ -123,7 +125,7 @@ const EmployeeDashboard = () => {
           return (
             <button
               key={key}
-              onClick={() => setActiveKey(key)}
+              onClick={() => { setActiveKey(key); if (key === 'addWeekly') setWeeklyRefreshKey((v) => v + 1); }}
               style={{
                 display: 'flex', alignItems: 'center', gap: '9px',
                 padding: '13px 28px',
@@ -154,9 +156,9 @@ const EmployeeDashboard = () => {
           boxShadow: '0 2px 14px rgba(0,0,0,0.07)',
         }}
       >
-        {activeKey === 'addWeekly' && <EmployeeWeeklySubmit />}
-        {activeKey === 'projects'  && <EmployeeProjectsView />}
-        {activeKey === 'hours'     && <EmployeeHoursHistory />}
+        {activeKey === 'addWeekly' && <EmployeeWeeklySubmit refreshKey={weeklyRefreshKey} onLogSubmitted={() => setLogRefreshKey((v) => v + 1)} />}
+        {activeKey === 'projects'  && <EmployeeProjectsView refreshKey={logRefreshKey} />}
+        {activeKey === 'hours'     && <EmployeeHoursHistory refreshKey={logRefreshKey} />}
       </div>
     </div>
   );

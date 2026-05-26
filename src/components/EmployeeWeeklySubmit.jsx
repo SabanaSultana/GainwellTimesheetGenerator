@@ -142,9 +142,9 @@ const SubmitConfirmModal = ({ entry, onConfirm, onCancel, saving }) => (
 // Inline form (no remarks, with confirmation step)
 const InlineEditForm = ({ entry, projectId, onSave, onCancel }) => {
   const [form, setForm] = useState({
-    workedHours:     entry.workedHours     != null ? String(entry.workedHours)     : '',
-    leaveHours:      entry.leaveHours      != null ? String(entry.leaveHours)      : '',
-    trainingHours:   entry.trainingHours   != null ? String(entry.trainingHours)   : '',
+    workedHours:     entry.workedHours     != null ? String(entry.workedHours)     : '0',
+    leaveHours:      entry.leaveHours      != null ? String(entry.leaveHours)      : '0',
+    trainingHours:   entry.trainingHours   != null ? String(entry.trainingHours)   : '0',
     progressPercent: entry.progressPercent != null ? String(entry.progressPercent) : '',
     justification:   '',
   });
@@ -159,8 +159,6 @@ const InlineEditForm = ({ entry, projectId, onSave, onCancel }) => {
     const training = Number(form.trainingHours || 0);
     const leave    = Number(form.leaveHours    || 0);
     if (worked < 0 || training < 0 || leave < 0) e.workedHours = 'Hours cannot be negative';
-    if (entry.plannedHours > 0 && worked > entry.plannedHours)
-      e.workedHours = `Cannot exceed planned hours (${entry.plannedHours}h)`;
     if (entry.status === 'submitted' && !form.justification.trim())
       e.justification = 'Justification required to update a submitted log';
     setErrors(e);
@@ -240,7 +238,7 @@ const InlineEditForm = ({ entry, projectId, onSave, onCancel }) => {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px', marginBottom: '16px' }}>
           {[
-            { key: 'workedHours',   label: 'Actual / Worked (h)', hint: entry.plannedHours > 0 ? `max ${entry.plannedHours}h` : '' },
+            { key: 'workedHours',   label: 'Actual / Worked (h)', hint: '' },
             { key: 'leaveHours',    label: 'Leave (h)',            hint: '' },
             { key: 'trainingHours', label: 'Training (h)',         hint: '' },
           ].map(({ key, label, hint }) => (
@@ -327,7 +325,7 @@ const InlineEditForm = ({ entry, projectId, onSave, onCancel }) => {
 };
 
 // Per-project card
-const ProjectCard = ({ project, paletteIdx }) => {
+const ProjectCard = ({ project, paletteIdx, refreshKey = 0, onLogSubmitted }) => {
   const palette = PROJECT_PALETTES[paletteIdx % PROJECT_PALETTES.length];
 
   const [entries,    setEntries]    = useState([]);
@@ -381,7 +379,7 @@ const ProjectCard = ({ project, paletteIdx }) => {
     finally { setLoading(false); }
   }, [project.project._id]);
 
-  useEffect(() => { fetchEntries(); }, [fetchEntries]);
+  useEffect(() => { fetchEntries(); }, [fetchEntries, refreshKey]);
 
   const filtered = entries.filter((e) => {
     if (!weekSearch) return true;
@@ -552,7 +550,7 @@ const ProjectCard = ({ project, paletteIdx }) => {
                               <InlineEditForm
                                 entry={entry}
                                 projectId={project.project._id}
-                                onSave={async () => { setEditKey(null); await fetchEntries(); }}
+                                onSave={async () => { setEditKey(null); await fetchEntries(); onLogSubmitted?.(); }}
                                 onCancel={() => setEditKey(null)}
                               />
                             </td>
@@ -572,7 +570,7 @@ const ProjectCard = ({ project, paletteIdx }) => {
 };
 
 // Main component
-const EmployeeWeeklySubmit = () => {
+const EmployeeWeeklySubmit = ({ refreshKey = 0, onLogSubmitted }) => {
   const [projects,   setProjects]   = useState([]);
   const [loading,    setLoading]    = useState(true);
   const [error,      setError]      = useState('');
@@ -665,7 +663,7 @@ const EmployeeWeeklySubmit = () => {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          {filteredProjects.map((p, idx) => <ProjectCard key={p.allocationId} project={p} paletteIdx={idx} />)}
+          {filteredProjects.map((p, idx) => <ProjectCard key={p.allocationId} project={p} paletteIdx={idx} refreshKey={refreshKey} onLogSubmitted={onLogSubmitted} />)}
         </div>
       )}
     </div>

@@ -394,7 +394,7 @@ const EmployeeSection = ({ employee, projectGroups, palette, idx, managerEmpId, 
 
 // ── Main Section ──────────────────────────────────────────────────────────────
 
-const WeeklyReviewSection = () => {
+const WeeklyReviewSection = ({ refreshKey = 0 }) => {
   const { employeeId: managerEmpId } = useParams();
   const [plans,       setPlans]       = useState([]);
   const [loading,     setLoading]     = useState(true);
@@ -424,7 +424,7 @@ const WeeklyReviewSection = () => {
     finally { setLoading(false); }
   }, [empSearch, projSearch, weekSearch, yearSearch]);
 
-  useEffect(() => { fetchPlans(); }, [fetchPlans]);
+  useEffect(() => { fetchPlans(); }, [fetchPlans, refreshKey]);
 
   const handleSearch = () => {
     setEmpSearch(inputEmp.trim());

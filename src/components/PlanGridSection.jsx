@@ -467,7 +467,7 @@ const WeeklyGrid = ({ plans, project, onRefresh }) => {
 
 // ── Main Section ──────────────────────────────────────────────────────────────
 
-const PlanGridSection = () => {
+const PlanGridSection = ({ refreshKey = 0 }) => {
   const [projects,          setProjects]          = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [gridPlans,         setGridPlans]          = useState([]);
@@ -480,7 +480,7 @@ const PlanGridSection = () => {
     fetch(SummaryApi.getProjects.url, { credentials: 'include' })
       .then((r) => r.json())
       .then((data) => { if (data.success) setProjects(data.data); });
-  }, []);
+  }, [refreshKey]);
 
   const fetchGrid = useCallback(async () => {
     if (!selectedProjectId) { setGridPlans([]); return; }
@@ -495,6 +495,30 @@ const PlanGridSection = () => {
   }, [selectedProjectId]);
 
   useEffect(() => { fetchGrid(); }, [fetchGrid]);
+
+  // Silent background refresh — updates grid data without showing the loading spinner.
+  const fetchGridSilent = useCallback(() => {
+    if (!selectedProjectId) return;
+    fetch(`${SummaryApi.getWeeklyPlans.url}/${selectedProjectId}`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((data) => { if (data.success) setGridPlans(data.data); })
+      .catch(() => {});
+  }, [selectedProjectId]);
+
+  // Auto-refresh every 30 s when a project is selected.
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    const id = setInterval(fetchGridSilent, 30000);
+    return () => clearInterval(id);
+  }, [selectedProjectId, fetchGridSilent]);
+
+  // Re-fetch instantly when the manager returns to the browser tab.
+  useEffect(() => {
+    if (!selectedProjectId) return;
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchGridSilent(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [selectedProjectId, fetchGridSilent]);
 
   const handleClear = () => {
     setSelectedProjectId('');
