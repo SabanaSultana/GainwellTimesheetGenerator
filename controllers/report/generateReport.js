@@ -94,19 +94,19 @@ const generateReport = async (req, res) => {
         const empIdStr = emp._id.toString();
         const plannedProjects     = Number(plannedProjectsOverrides[empIdStr] ?? totalPlannedHours);
         const actualProjects      = Number(actualProjectsOverrides[empIdStr]  ?? totalActualHours);
-        const absoluteAvailability = Math.ceil(totalAvailability * 0.8);
+        const absoluteAvailability = Math.round(totalAvailability * 0.8);
 
         const individualEfficiency = plannedProjects > 0
-          ? Math.ceil((actualProjects / plannedProjects) * 100)
+          ? Math.round((actualProjects / plannedProjects) * 100)
           : 0;
         const engagement = totalActualHours > 0
-          ? Math.ceil((totalPlannedHours / totalActualHours) * 100)
+          ? Math.round((totalPlannedHours / totalActualHours) * 100)
           : 0;
         const planningEfficiency = absoluteAvailability > 0
-          ? Math.ceil((totalPlannedHours / absoluteAvailability) * 100)
+          ? Math.round((totalPlannedHours / absoluteAvailability) * 100)
           : 0;
-        const leavePercent    = totalAvailability > 0 ? Math.ceil((totalLeaveHours    / totalAvailability) * 100) : 0;
-        const trainingPercent = totalAvailability > 0 ? Math.ceil((totalTrainingHours / totalAvailability) * 100) : 0;
+        const leavePercent    = totalAvailability > 0 ? Math.round((totalLeaveHours    / totalAvailability) * 100) : 0;
+        const trainingPercent = totalAvailability > 0 ? Math.round((totalTrainingHours / totalAvailability) * 100) : 0;
         const total = planningEfficiency + leavePercent + trainingPercent;
 
         return {
