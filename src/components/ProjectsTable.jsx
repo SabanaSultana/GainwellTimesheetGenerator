@@ -35,6 +35,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
   const [deleteJust, setDeleteJust]       = useState('');
   const [deleting, setDeleting]           = useState(false);
   const [deleteError, setDeleteError]     = useState('');
+  const [textPopup, setTextPopup]         = useState('');
   const debounceRef = useRef(null);
 
   const fetchProjects = useCallback(async () => {
@@ -120,6 +121,26 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif' }}>
+
+      {/* Full-text popup modal */}
+      {textPopup && (
+        <div
+          onClick={() => setTextPopup('')}
+          style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(14,30,61,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: '14px', boxShadow: '0 12px 48px rgba(0,0,0,0.22)', padding: '28px 32px', maxWidth: '540px', width: '100%', position: 'relative' }}
+          >
+            <button
+              onClick={() => setTextPopup('')}
+              style={{ position: 'absolute', top: '14px', right: '14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px', color: '#9ca3af', lineHeight: 1 }}
+            >✕</button>
+            <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{textPopup}</p>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '18px' }}>
         <div style={{ position: 'relative', flex: '1 1 260px', maxWidth: '360px' }}>
@@ -194,7 +215,10 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
                   </td>
                   <td style={{ ...tdStyle, fontWeight: 600, color: '#0e1e3d', maxWidth: '180px' }}>{p.projectName}</td>
                   <td style={{ ...tdStyle, color: '#6b7280', maxWidth: '160px', overflow: 'hidden' }}>
-                    <span title={p.projectDescription} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', wordBreak: 'break-all' }}>
+                    <span
+                      onClick={() => p.projectDescription && setTextPopup(p.projectDescription)}
+                      style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: p.projectDescription ? 'pointer' : 'default', textDecoration: p.projectDescription ? 'underline dotted #9ca3af' : 'none' }}
+                    >
                       {p.projectDescription || '—'}
                     </span>
                   </td>

@@ -179,20 +179,24 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
   const editableCell = (type, plan) => {
     const val = getVal(type, plan);
     const cfg = TYPE_CFG[type];
+    const showsZero = type !== 'actual'; // leave & training always show numeric value
+    const isEmpty   = val == null || (type === 'actual' && val === 0);
     return (
       <td
         title="Click to edit"
         onClick={() => openEdit(plan, type)}
         style={{
-          ...tdStyle, cursor: 'pointer', color: val > 0 ? cfg.color : '#d1d5db',
-          fontWeight: val > 0 ? 700 : 400, background: val > 0 ? cfg.bg : 'transparent',
+          ...tdStyle, cursor: 'pointer',
+          color: val > 0 ? cfg.color : isEmpty ? '#d1d5db' : '#6b7280',
+          fontWeight: val > 0 ? 700 : 400,
+          background: val > 0 ? cfg.bg : 'transparent',
           transition: 'filter 0.15s',
         }}
         onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(0.92)'; }}
         onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-          {val > 0 ? val : '—'}
+          {isEmpty ? '—' : val}
           <BsPencilSquare size={9} style={{ opacity: 0.45 }} />
         </span>
       </td>

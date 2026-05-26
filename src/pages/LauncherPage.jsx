@@ -4,7 +4,7 @@ import { getAuthUser, removeAuthUser } from '../utils/auth';
 import SummaryApi from '../apis/index.jsx';
 import logo from '../assets/logo_gainwell_r.png';
 import { BiLogOut } from 'react-icons/bi';
-import { BsGridFill, BsBarChartFill } from 'react-icons/bs';
+import { BsGridFill, BsBarChartFill, BsLockFill } from 'react-icons/bs';
 import '../styles/portal.css';
 
 const NEXUS_URL = 'https://apps.acceleronsolutions.io/nexus/';
@@ -38,14 +38,17 @@ const LauncherPage = () => {
   };
 
   const apps = [
-    ...(!isEmployee ? [{
+    {
       key: 'nexus',
-      icon: <BsGridFill size={32} color="#fff" />,
-      iconBg: 'linear-gradient(135deg, #3b82f6 60%, #6366f1 100%)',
+      icon: isEmployee ? <BsLockFill size={28} color="#fff" /> : <BsGridFill size={32} color="#fff" />,
+      iconBg: isEmployee
+        ? 'linear-gradient(135deg, #94a3b8 60%, #64748b 100%)'
+        : 'linear-gradient(135deg, #3b82f6 60%, #6366f1 100%)',
       title: 'NEXUS',
       description: 'Project tracking, CoE analytics, operational monitoring and engineering workflow systems.',
-      onLaunch: launchNexus,
-    }] : []),
+      onLaunch: isEmployee ? null : launchNexus,
+      locked: isEmployee,
+    },
     {
       key: 'designworks',
       icon: <BsBarChartFill size={32} color="#fff" />,
@@ -53,6 +56,7 @@ const LauncherPage = () => {
       title: 'DESIGNWORKS',
       description: 'Engineering collaboration platform, digital workspace and technical asset management.',
       onLaunch: launchDesignWorks,
+      locked: false,
     },
   ];
 
@@ -100,18 +104,35 @@ const LauncherPage = () => {
       {/* Tools grid */}
       <div className="tools-grid">
         {apps.map((app) => (
-          <div key={app.key} className="tool-card">
+          <div
+            key={app.key}
+            className="tool-card"
+            style={app.locked ? { opacity: 0.6, filter: 'grayscale(0.35)' } : undefined}
+          >
             <div className="tool-top">
               <div className="tool-icon" style={{ background: app.iconBg }}>
                 {app.icon}
               </div>
-              <span className="tool-status">ACTIVE</span>
+              {app.locked
+                ? <span className="tool-status" style={{ background: 'rgba(100,116,139,0.12)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.25)' }}>LOCKED</span>
+                : <span className="tool-status">ACTIVE</span>
+              }
             </div>
             <h2>{app.title}</h2>
             <p>{app.description}</p>
-            <button className="launch-btn" onClick={app.onLaunch}>
-              Launch Platform →
-            </button>
+            {app.locked ? (
+              <button
+                className="launch-btn"
+                disabled
+                style={{ opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'none' }}
+              >
+                Launch Platform →
+              </button>
+            ) : (
+              <button className="launch-btn" onClick={app.onLaunch}>
+                Launch Platform →
+              </button>
+            )}
           </div>
         ))}
       </div>

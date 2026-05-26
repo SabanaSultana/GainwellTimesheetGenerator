@@ -992,11 +992,11 @@ const AddWeeklyPlanSection = () => {
                             <td style={{ ...tdStyle, color: '#16a34a', fontWeight: 600 }}>
                               {plan.workedHours > 0 ? plan.workedHours : <span style={{ color: '#d1d5db' }}>—</span>}
                             </td>
-                            <td style={{ ...tdStyle, color: '#9333ea' }}>
-                              {plan.leaveHours > 0 ? plan.leaveHours : <span style={{ color: '#d1d5db' }}>—</span>}
+                            <td style={{ ...tdStyle, color: plan.leaveHours > 0 ? '#9333ea' : '#6b7280' }}>
+                              {plan.leaveHours != null ? plan.leaveHours : <span style={{ color: '#d1d5db' }}>—</span>}
                             </td>
-                            <td style={{ ...tdStyle, color: '#d97706' }}>
-                              {plan.trainingHours > 0 ? plan.trainingHours : <span style={{ color: '#d1d5db' }}>—</span>}
+                            <td style={{ ...tdStyle, color: plan.trainingHours > 0 ? '#d97706' : '#6b7280' }}>
+                              {plan.trainingHours != null ? plan.trainingHours : <span style={{ color: '#d1d5db' }}>—</span>}
                             </td>
                             <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed', fontSize: '15px' }}>
                               {plan.progressPercent != null ? `${plan.progressPercent}%` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>—</span>}

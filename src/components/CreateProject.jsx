@@ -14,7 +14,10 @@ const generateNextCode = (codes) => {
     .filter((c) => /^ENT\d{4}$/i.test(c))
     .map((c) => parseInt(c.slice(3), 10));
   if (nums.length === 0) return 'ENT0001';
-  return `ENT${String(Math.max(...nums) + 1).padStart(4, '0')}`;
+  const numSet = new Set(nums);
+  let next = 1;
+  while (numSet.has(next)) next++;
+  return `ENT${String(next).padStart(4, '0')}`;
 };
 
 // embedded=true  → rendered inside ManagerDashboard tab (no outer wrapper)
@@ -77,7 +80,8 @@ const CreateProject = ({ embedded = false, onSuccess }) => {
       e.projectCode = 'Format must be ENT#### (e.g. ENT0001)';
     }
     if (!formData.projectName.trim()) e.projectName = 'Project name is required';
-    if (countWords(formData.projectDescription) > 100) e.projectDescription = 'Maximum 100 words allowed';
+    if (!formData.projectDescription.trim()) e.projectDescription = 'Description is required';
+    else if (countWords(formData.projectDescription) > 100) e.projectDescription = 'Maximum 100 words allowed';
     if (!formData.startDate)          e.startDate   = 'Start date is required';
     if (!formData.endDate) {
       e.endDate = 'End date is required';
@@ -331,7 +335,7 @@ const CreateProject = ({ embedded = false, onSuccess }) => {
 
           {/* ── Description (full width) ─────────────────────────────────── */}
           <div style={{ marginBottom: '20px' }}>
-            <label style={labelStyle}>Description</label>
+            <label style={labelStyle}>Description <span style={{ color: '#ef4444' }}>*</span></label>
             <textarea
               name="projectDescription"
               value={formData.projectDescription}

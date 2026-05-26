@@ -5,10 +5,13 @@ import SummaryApi from '../apis/index.jsx';
 const fmt = (d) =>
   d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
+const clamp = (s, n = 60) => s && s.length > n ? s.slice(0, n) + '…' : s;
+
 const JustificationHistoryModal = ({ project, onClose }) => {
-  const [logs, setLogs]       = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState('');
+  const [logs, setLogs]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+  const [textPopup, setTextPopup] = useState('');
 
   const fetchLogs = useCallback(async () => {
     if (!project) return;
@@ -50,11 +53,28 @@ const JustificationHistoryModal = ({ project, onClose }) => {
   const thStyle = { padding: '10px 14px', textAlign: 'left', fontSize: '11px', fontWeight: 700, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '2px solid #f3f4f6', background: '#fafafa', whiteSpace: 'nowrap' };
   const tdStyle = { padding: '11px 14px', fontSize: '12.5px', color: '#374151', borderBottom: '1px solid #f3f4f6', verticalAlign: 'top' };
 
+  const openPopup = (text) => { if (text && text !== '—') setTextPopup(text); };
+
   return (
     <div
       style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(14,30,61,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
       onClick={onClose}
     >
+      {/* Inner text popup */}
+      {textPopup && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{ position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(14,30,61,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}
+        >
+          <div style={{ background: '#fff', borderRadius: '14px', boxShadow: '0 12px 48px rgba(0,0,0,0.28)', padding: '28px 32px', maxWidth: '520px', width: '100%', position: 'relative' }}>
+            <button
+              onClick={() => setTextPopup('')}
+              style={{ position: 'absolute', top: '14px', right: '14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '18px', color: '#9ca3af', lineHeight: 1 }}
+            >✕</button>
+            <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{textPopup}</p>
+          </div>
+        </div>
+      )}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 12px 48px rgba(0,0,0,0.22)', width: '100%', maxWidth: '860px', maxHeight: '88vh', display: 'flex', flexDirection: 'column', fontFamily: 'Arial, sans-serif' }}
@@ -125,11 +145,28 @@ const JustificationHistoryModal = ({ project, onClose }) => {
                         <td style={{ ...tdStyle, fontSize: '12px', color: '#374151', fontWeight: 600 }}>
                           {ch.field.replace(/([A-Z])/g, ' $1').trim()}
                         </td>
-                        <td style={{ ...tdStyle, color: '#dc2626', fontSize: '12px' }}>{ch.oldValue}</td>
-                        <td style={{ ...tdStyle, color: '#16a34a', fontSize: '12px' }}>{ch.newValue}</td>
+                        <td
+                          style={{ ...tdStyle, color: '#dc2626', fontSize: '12px', maxWidth: '140px', cursor: ch.oldValue && ch.oldValue !== '—' ? 'pointer' : 'default' }}
+                          onClick={() => openPopup(ch.oldValue)}
+                          title={ch.oldValue !== '—' ? 'Click to view full text' : ''}
+                        >
+                          <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: ch.oldValue && ch.oldValue !== '—' ? 'underline dotted #fca5a5' : 'none' }}>{clamp(ch.oldValue)}</span>
+                        </td>
+                        <td
+                          style={{ ...tdStyle, color: '#16a34a', fontSize: '12px', maxWidth: '140px', cursor: ch.newValue && ch.newValue !== '—' ? 'pointer' : 'default' }}
+                          onClick={() => openPopup(ch.newValue)}
+                          title={ch.newValue !== '—' ? 'Click to view full text' : ''}
+                        >
+                          <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: ch.newValue && ch.newValue !== '—' ? 'underline dotted #86efac' : 'none' }}>{clamp(ch.newValue)}</span>
+                        </td>
                         {ci === 0 && (
-                          <td style={{ ...tdStyle, maxWidth: '200px', fontSize: '12px', color: '#374151' }} rowSpan={rows.length}>
-                            {log.justification}
+                          <td
+                            style={{ ...tdStyle, maxWidth: '200px', fontSize: '12px', color: '#374151', cursor: log.justification ? 'pointer' : 'default' }}
+                            rowSpan={rows.length}
+                            onClick={() => openPopup(log.justification)}
+                            title={log.justification ? 'Click to view full text' : ''}
+                          >
+                            <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textDecoration: log.justification ? 'underline dotted #9ca3af' : 'none' }}>{clamp(log.justification)}</span>
                           </td>
                         )}
                       </tr>
