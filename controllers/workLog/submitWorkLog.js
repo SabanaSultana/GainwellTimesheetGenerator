@@ -30,15 +30,6 @@ const submitWorkLog = async (req, res) => {
       });
     }
 
-    const plannedHours = plan?.plannedHours || 0;
-
-    if (plannedHours > 0 && workedHours > plannedHours) {
-      return res.status(400).json({
-        success: false,
-        message: `Worked hours (${workedHours}) cannot exceed planned hours (${plannedHours}) for this week`,
-      });
-    }
-
     // Only check the allocation budget cap when there is an active allocation
     if (allocation) {
       const allLogs = await WorkLog.find({ project: projectId, employee: req.user.id, status: 'submitted' });

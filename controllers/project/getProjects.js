@@ -27,14 +27,11 @@ const getProjects = async (req, res) => {
     const totalPlannedMap = {};
     totalPlannedAgg.forEach((t) => { totalPlannedMap[t._id.toString()] = t.totalPlannedHrs; });
 
-    // Department till-now: planned hours for manager's team/dept up to today
-    const today = new Date();
-    const { weekNum: todayFYWeek, fyYear: todayFYYear } = getFYWeek(today);
-
+    // Departmental planned hours: all planned hours for this manager's team/dept, ALL weeks (no date filter)
     const managerUser  = await User.findById(req.user.id).select('department employeeId');
     const deptName     = managerUser?.department   || '';
     const managerEmpId = managerUser?.employeeId   || '';
-    let deptTillNowMap = {};
+    let deptPlannedMap = {};
 
     // Collect team IDs: direct reports (by managerEmployeeId) + same-department employees
     const [directReports, deptEmps] = await Promise.all([
@@ -50,29 +47,21 @@ const getProjects = async (req, res) => {
     });
     const teamUserIds = [...idSet.values()];
 
-    console.log(`[getProjects] manager dept="${deptName}" empId="${managerEmpId}" teamSize=${teamUserIds.length} todayFY=${todayFYYear}w${todayFYWeek}`);
+    console.log(`[getProjects] manager dept="${deptName}" empId="${managerEmpId}" teamSize=${teamUserIds.length}`);
 
     if (teamUserIds.length > 0) {
       const deptAgg = await WeeklyPlan.aggregate([
-        {
-          $match: {
-            employee: { $in: teamUserIds },
-            $or: [
-              { year: { $lt: todayFYYear } },
-              { year: todayFYYear, weekNumber: { $lte: todayFYWeek } },
-            ],
-          },
-        },
-        { $group: { _id: '$project', deptTillNowHrs: { $sum: '$plannedHours' } } },
+        { $match: { employee: { $in: teamUserIds } } },
+        { $group: { _id: '$project', deptPlannedHrs: { $sum: '$plannedHours' } } },
       ]);
       console.log(`[getProjects] deptAgg result:`, deptAgg);
-      deptAgg.forEach((d) => { deptTillNowMap[d._id.toString()] = d.deptTillNowHrs; });
+      deptAgg.forEach((d) => { deptPlannedMap[d._id.toString()] = d.deptPlannedHrs; });
     }
 
     const data = projects.map((p) => ({
       ...p.toObject(),
-      totalPlannedHrs: totalPlannedMap[p._id.toString()]  || 0,
-      deptTillNowHrs:  deptTillNowMap[p._id.toString()]   || 0,
+      totalPlannedHrs: totalPlannedMap[p._id.toString()] || 0,
+      deptPlannedHrs:  deptPlannedMap[p._id.toString()]  || 0,
     }));
 
     return res.status(200).json({ success: true, data });
