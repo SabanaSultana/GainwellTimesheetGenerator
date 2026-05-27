@@ -16,6 +16,9 @@ const submitWorkLog = async (req, res) => {
     }
 
     const employee = await User.findById(req.user.id).select('name employeeId department');
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
     // Employee must have either an active allocation OR a weekly plan for this week
     const [allocation, plan] = await Promise.all([
