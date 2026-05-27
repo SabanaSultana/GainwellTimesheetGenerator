@@ -15,6 +15,7 @@ const workLogRoutes           = require('./routes/workLogs')
 const auditLogRoutes          = require('./routes/auditLogs')
 const summaryRoutes           = require('./routes/summary')
 const reportRoutes            = require('./routes/report')
+const projectProgressRoutes   = require('./routes/projectProgress')
 
 const app = express()
 
@@ -40,6 +41,7 @@ app.use('/api/work-logs',            workLogRoutes)
 app.use('/api/audit-logs',           auditLogRoutes)
 app.use('/api/weekly-summary',       summaryRoutes)
 app.use('/api/reports',              reportRoutes)
+app.use('/api/project-progress',     projectProgressRoutes)
 
 const PORT = process.env.PORT || 3000
 

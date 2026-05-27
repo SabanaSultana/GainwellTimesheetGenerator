@@ -9,17 +9,16 @@ const DEPARTMENTS = [
   'Digital Tech. & Program Management',
 ];
 
-const deptHoursSchema = new mongoose.Schema(
+const projectProgressSchema = new mongoose.Schema(
   {
     project:    { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
     department: { type: String, enum: DEPARTMENTS, required: true },
-    totalHours: { type: Number, required: true, min: 0 },
-    setBy:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    progress:   { type: Number, required: true, min: 0, max: 100, default: 0 },
     updatedBy:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );
 
-deptHoursSchema.index({ project: 1, department: 1 }, { unique: true });
+projectProgressSchema.index({ project: 1, department: 1 }, { unique: true });
 
-module.exports = mongoose.model('DeptHours', deptHoursSchema);
+module.exports = mongoose.model('ProjectProgress', projectProgressSchema);

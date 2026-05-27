@@ -35,11 +35,11 @@ const userSchema=new mongoose.Schema(
         department:{
             type:String,
             enum:[
-                'Mechanical',
+                'Mechanical And System Integration',
                 'Virtual Engineering Manufacturing',
                 'Lean Manufacturing & Tool Design',
-                'Electrical',
-                'Hydraulics',
+                'Electrical And Automation',
+                'Hydraulics System Design',
                 'Digital Tech. & Program Management',
             ],
             required:true
