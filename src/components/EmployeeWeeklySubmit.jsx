@@ -18,7 +18,6 @@ function mergeEntries(plans, logs) {
       plannedHours: p.plannedHours || 0,
       totalWeeklyHours: p.totalWeeklyHours || 0,
       workedHours: null, leaveHours: null, trainingHours: null,
-      progressPercent: p.progressPercent ?? null,
       status: null, logId: null,
     };
   });
@@ -30,7 +29,6 @@ function mergeEntries(plans, logs) {
     map[key].workedHours    = l.workedHours    ?? null;
     map[key].leaveHours     = l.leaveHours     ?? null;
     map[key].trainingHours  = l.trainingHours  ?? null;
-    map[key].progressPercent= l.progressPercent ?? null;
     map[key].status         = l.status || null;
     map[key].logId          = l._id;
     if (l.totalWeeklyHours) map[key].totalWeeklyHours = l.totalWeeklyHours;
@@ -145,7 +143,6 @@ const InlineEditForm = ({ entry, projectId, onSave, onCancel }) => {
     workedHours:     entry.workedHours     != null ? String(entry.workedHours)     : '0',
     leaveHours:      entry.leaveHours      != null ? String(entry.leaveHours)      : '0',
     trainingHours:   entry.trainingHours   != null ? String(entry.trainingHours)   : '0',
-    progressPercent: entry.progressPercent != null ? String(entry.progressPercent) : '',
     justification:   '',
   });
   const [errors,      setErrors]      = useState({});
@@ -178,7 +175,6 @@ const InlineEditForm = ({ entry, projectId, onSave, onCancel }) => {
           workedHours:     Number(form.workedHours     || 0),
           leaveHours:      Number(form.leaveHours      || 0),
           trainingHours:   Number(form.trainingHours   || 0),
-          progressPercent: form.progressPercent !== '' ? Math.min(100, Math.max(0, Number(form.progressPercent))) : undefined,
           justification:   form.justification   || undefined,
         }),
       });
@@ -260,27 +256,6 @@ const InlineEditForm = ({ entry, projectId, onSave, onCancel }) => {
               )}
             </div>
           ))}
-        </div>
-
-        {/* Progress percent */}
-        <div style={{ marginBottom: '16px', maxWidth: '220px' }}>
-          <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-            % Progress This Week
-            <span style={{ fontSize: '11px', color: '#9ca3af', marginLeft: '5px' }}>(0–100, optional)</span>
-          </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="number" min="0" max="100"
-              value={form.progressPercent} placeholder="e.g. 75"
-              onChange={(e) => setForm((p) => ({ ...p, progressPercent: e.target.value }))}
-              style={{ ...fieldStyle('progressPercent'), flex: 1 }}
-            />
-            {form.progressPercent !== '' && (
-              <span style={{ fontSize: '14px', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>
-                {Math.min(100, Math.max(0, Number(form.progressPercent || 0)))}%
-              </span>
-            )}
-          </div>
         </div>
 
         {entry.status === 'submitted' && (
@@ -486,7 +461,7 @@ const ProjectCard = ({ project, paletteIdx, refreshKey = 0, onLogSubmitted }) =>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '820px' }}>
                 <thead>
                   <tr>
-                    {['Year', 'Week', 'Wk Cap (h)', 'Planned (h)', 'Actual (h)', 'Leave (h)', 'Training (h)', '% Progress', 'Status', 'Action'].map((h) => (
+                    {['Year', 'Week', 'Wk Cap (h)', 'Planned (h)', 'Actual (h)', 'Leave (h)', 'Training (h)', 'Status', 'Action'].map((h) => (
                       <th key={h} style={thStyle}>{h}</th>
                     ))}
                   </tr>
@@ -519,9 +494,6 @@ const ProjectCard = ({ project, paletteIdx, refreshKey = 0, onLogSubmitted }) =>
                           <td style={{ ...tdStyle, color: '#2563eb', fontSize: '15px' }}>
                             {entry.trainingHours != null ? entry.trainingHours : <span style={{ color: '#d1d5db' }}>—</span>}
                           </td>
-                          <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed', fontSize: '15px' }}>
-                            {entry.progressPercent != null ? `${entry.progressPercent}%` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>—</span>}
-                          </td>
                           <td style={tdStyle}>
                             {entry.status ? <StatusBadge status={entry.status} /> : <span style={{ color: '#d1d5db', fontSize: '13px' }}>Not submitted</span>}
                           </td>
@@ -538,7 +510,7 @@ const ProjectCard = ({ project, paletteIdx, refreshKey = 0, onLogSubmitted }) =>
                                   boxShadow:  isEditing ? 'none' : '0 2px 8px rgba(0,0,0,0.14)',
                                 }}
                               >
-                                {isEditing ? <><BsX size={15} /> Close</> : <><BsPlusCircle size={13} /> Submit</>}
+                                {isEditing ? <><BsX size={15} /> Close</> : <><BsPlusCircle size={13} /> Fill Data</>}
                               </button>
                             )}
                           </td>

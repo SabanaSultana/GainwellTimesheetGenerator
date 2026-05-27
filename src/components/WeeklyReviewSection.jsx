@@ -99,8 +99,8 @@ const EditModal = ({ modal, editVal, setEditVal, editJustify, setEditJustify, sa
 
 // ── Project Card ──────────────────────────────────────────────────────────────
 
-const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) => {
-  const [expanded,  setExpanded]  = useState(false);
+const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave, panelKey, openPanelKey, onTogglePanel }) => {
+  const isOpen     = openPanelKey.has(panelKey);
   const [editModal, setEditModal] = useState(null);
   const [editVal,   setEditVal]   = useState('');
   const [editJust,  setEditJust]  = useState('');
@@ -120,8 +120,6 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
   const totalActual    = plans.reduce((s, p) => s + (getVal('actual', p) || 0), 0);
   const submittedWeeks = plans.filter((p) => p.logStatus === 'submitted').length;
   const pendingWeeks   = plans.length - submittedWeeks;
-
-  const totalProgress = sorted.reduce((s, p) => s + (p.progressPercent || 0), 0);
 
   const openEdit = (plan, type) => {
     const cur = getVal(type, plan);
@@ -216,17 +214,21 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
         />
       )}
 
-      <div style={{ background: '#fff', border: `1.5px solid ${palette.border}`, borderRadius: '12px', overflow: 'hidden', marginBottom: '12px' }}>
-        {/* Card header */}
-        <div style={{ padding: '14px 18px', background: palette.light }}>
+      <div style={{ background: '#fff', border: `1.5px solid ${isOpen ? palette.accent : palette.border}`, borderRadius: '12px', overflow: 'hidden', marginBottom: '12px', transition: 'border-color 0.15s' }}>
+
+        {/* Card header — entire row clickable */}
+        <div
+          onClick={() => onTogglePanel(panelKey)}
+          style={{ padding: '14px 18px', background: isOpen ? palette.light : '#fff', cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={(e) => { if (!isOpen) e.currentTarget.style.background = palette.light; }}
+          onMouseLeave={(e) => { if (!isOpen) e.currentTarget.style.background = isOpen ? palette.light : '#fff'; }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
               <BsFolderFill size={14} color={palette.accent} />
               <span style={{ background: palette.badge, color: palette.accent, padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 800 }}>{project?.projectCode}</span>
               <span style={{ fontSize: '14px', fontWeight: 700, color: '#0e1e3d', wordBreak: 'break-word' }}>{project?.projectName}</span>
             </div>
-
-            {/* Stats row */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
               {[
                 { label: 'Planned (h)',  value: totalPlanned,   color: '#1d4ed8' },
@@ -240,26 +242,21 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
                   <div style={{ fontSize: '16px', fontWeight: 800, color: s.color }}>{s.value}</div>
                 </div>
               ))}
-
-              <button
-                onClick={() => setExpanded((v) => !v)}
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: `1.5px solid ${palette.border}`, background: expanded ? palette.badge : '#fff', color: palette.accent, fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}
-              >
-                {expanded ? <BsChevronUp size={11} /> : <BsChevronDown size={11} />}
-                {expanded ? 'Hide' : 'View Weeks'}
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: `1.5px solid ${isOpen ? palette.accent : palette.border}`, background: isOpen ? palette.badge : '#fff', color: palette.accent, fontSize: '12px', fontWeight: 700 }}>
+                {isOpen ? <BsChevronUp size={11} /> : <BsChevronDown size={11} />}
+                {isOpen ? 'Hide' : 'View Weeks'}
+              </div>
             </div>
           </div>
-
         </div>
 
-        {/* Weekly table */}
-        {expanded && (
-          <div style={{ overflowX: 'auto' }}>
+        {/* Inline weekly table */}
+        {isOpen && (
+          <div style={{ overflowX: 'auto', borderTop: `1px solid ${palette.border}` }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '620px' }}>
               <thead>
                 <tr>
-                  {['Year', 'Week No.', 'Wk Cap (h)', 'Planned (h)', 'Actual (h)', 'Leave (h)', 'Training (h)', 'Progress (%)', 'Status'].map((h) => (
+                  {['Year', 'Week No.', 'Wk Cap (h)', 'Planned (h)', 'Actual (h)', 'Leave (h)', 'Training (h)', 'Status'].map((h) => (
                     <th key={h} style={thStyle}>{h}</th>
                   ))}
                 </tr>
@@ -278,24 +275,10 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
                     {editableCell('actual',   plan)}
                     {editableCell('leave',    plan)}
                     {editableCell('training', plan)}
-                    <td style={{ ...tdStyle, fontWeight: 700, color: (plan.progressPercent || 0) > 0 ? '#1d4ed8' : '#d1d5db' }}>
-                      {plan.progressPercent > 0 ? `${plan.progressPercent}%` : '—'}
-                    </td>
                     <td style={tdStyle}>{statusBadge(plan.logStatus)}</td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr style={{ background: '#f0f4ff', borderTop: '2px solid #bfdbfe' }}>
-                  <td colSpan={7} style={{ ...tdStyle, fontWeight: 700, color: '#374151', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.4px', borderBottom: 'none' }}>
-                    Total Progress ({sorted.length} week{sorted.length !== 1 ? 's' : ''})
-                  </td>
-                  <td style={{ ...tdStyle, fontWeight: 800, color: '#1d4ed8', fontSize: '15px', borderBottom: 'none' }}>
-                    {totalProgress}%
-                  </td>
-                  <td style={{ ...tdStyle, borderBottom: 'none' }} />
-                </tr>
-              </tfoot>
             </table>
           </div>
         )}
@@ -306,7 +289,7 @@ const ProjectCard = ({ project, plans, empId, empName, palette, onEditSave }) =>
 
 // ── Employee Section ──────────────────────────────────────────────────────────
 
-const EmployeeSection = ({ employee, projectGroups, palette, idx, managerEmpId, onEditSave }) => {
+const EmployeeSection = ({ employee, projectGroups, palette, idx, managerEmpId, onEditSave, openPanelKey, onTogglePanel }) => {
   const [open, setOpen] = useState(true);
 
   const openTracking = (e) => {
@@ -384,6 +367,9 @@ const EmployeeSection = ({ employee, projectGroups, palette, idx, managerEmpId, 
               empName={employee?.name || 'Unknown'}
               palette={palette}
               onEditSave={onEditSave}
+              panelKey={`${employee?._id}-${pg.project?._id}`}
+              openPanelKey={openPanelKey}
+              onTogglePanel={onTogglePanel}
             />
           ))}
         </div>
@@ -396,9 +382,16 @@ const EmployeeSection = ({ employee, projectGroups, palette, idx, managerEmpId, 
 
 const WeeklyReviewSection = ({ refreshKey = 0 }) => {
   const { employeeId: managerEmpId } = useParams();
-  const [plans,       setPlans]       = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [error,       setError]       = useState('');
+  const [plans,        setPlans]        = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [error,        setError]        = useState('');
+  const [openPanelKey, setOpenPanelKey] = useState(new Set());
+
+  const handleTogglePanel = (key) => setOpenPanelKey((prev) => {
+    const next = new Set(prev);
+    next.has(key) ? next.delete(key) : next.add(key);
+    return next;
+  });
   const [empSearch,   setEmpSearch]   = useState('');
   const [projSearch,  setProjSearch]  = useState('');
   const [weekSearch,  setWeekSearch]  = useState('');
@@ -583,6 +576,8 @@ const WeeklyReviewSection = ({ refreshKey = 0 }) => {
             idx={idx}
             managerEmpId={managerEmpId}
             onEditSave={fetchPlans}
+            openPanelKey={openPanelKey}
+            onTogglePanel={handleTogglePanel}
           />
         ))
       )}

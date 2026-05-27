@@ -6,8 +6,8 @@ import ConfirmModal from './ConfirmModal.jsx';
 const countWords = (text) => text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
 
 const DEPARTMENTS = [
-  'Mechanical', 'Virtual Engineering Manufacturing', 'Lean Manufacturing & Tool Design',
-  'Electrical', 'Hydraulics', 'Digital Tech. & Program Management',
+  'Mechanical And System Integration', 'Virtual Engineering Manufacturing', 'Lean Manufacturing & Tool Design',
+  'Electrical And Automation', 'Hydraulics System Design', 'Digital Tech. & Program Management',
 ];
 
 const DeptHoursSection = ({ projectId }) => {

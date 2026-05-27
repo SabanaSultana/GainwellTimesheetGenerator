@@ -167,7 +167,7 @@ const ProjectDetailPage = () => {
                 { label: 'End Date',      value: fmt(project?.endDate)   },
                 { label: 'Created By',    value: `${project?.createdBy?.name || '—'} (${project?.createdBy?.employeeId || ''})` },
                 { label: 'Last Modified', value: project?.lastModifiedBy ? project.lastModifiedBy.name : '—' },
-                { label: 'Created At',    value: fmt(project?.createdAt) },
+                { label: 'Created On',    value: fmt(project?.createdAt) },
                 { label: 'Updated At',    value: fmt(project?.updatedAt) },
               ].map((item) => (
                 <div key={item.label} style={{ background: '#f8faff', borderRadius: '10px', padding: '14px 16px', border: '1px solid #e8eeff' }}>

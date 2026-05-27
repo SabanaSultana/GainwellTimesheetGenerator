@@ -65,13 +65,8 @@ const WeeklyBreakdown = ({ projectId, palette }) => {
     { label: 'Actual (h)' },
     { label: 'Leave (h)' },
     { label: 'Training (h)' },
-    { label: '% Progress' },
     { label: 'Status' },
   ];
-
-  // Sum of all reported progress values across all weeks
-  const pctLogs       = logs.filter((l) => l.progressPercent != null);
-  const projectProgress = pctLogs.length > 0 ? pctLogs.reduce((s, l) => s + l.progressPercent, 0) : null;
 
   return (
     <div style={{ overflowX: 'auto', borderRadius: '8px', border: `1.5px solid ${palette.border}`, marginTop: '4px' }}>
@@ -99,30 +94,10 @@ const WeeklyBreakdown = ({ projectId, palette }) => {
                 <td style={{ ...tdStyle, fontWeight: 700, color: '#1d4ed8' }}>{actual}</td>
                 <td style={{ ...tdStyle, color: '#6d28d9' }}>{leave}</td>
                 <td style={{ ...tdStyle, color: '#2563eb' }}>{training}</td>
-                <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed' }}>
-                  {log.progressPercent != null
-                    ? `${log.progressPercent}%`
-                    : <span style={{ color: '#d1d5db', fontWeight: 400 }}>—</span>}
-                </td>
                 <td style={tdStyle}>{statusBadge(log.status)}</td>
               </tr>
             );
           })}
-          {/* Total progress summary row */}
-          <tr style={{ background: `linear-gradient(90deg,${palette.light},#f5f3ff)`, borderTop: `2px solid ${palette.border}` }}>
-            <td colSpan={6} style={{ ...tdStyle, fontWeight: 700, color: palette.accent, fontSize: '12.5px' }}>
-              Total Project Progress
-              <span style={{ marginLeft: '8px', fontWeight: 400, color: '#9ca3af', fontSize: '11px' }}>
-                (sum of all weeks)
-              </span>
-            </td>
-            <td style={{ ...tdStyle, fontWeight: 800, color: '#7c3aed', fontSize: '16px' }}>
-              {projectProgress != null
-                ? <span style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', padding: '3px 12px', borderRadius: '12px' }}>{projectProgress}%</span>
-                : <span style={{ color: '#d1d5db', fontWeight: 400, fontSize: '13px' }}>—</span>}
-            </td>
-            <td style={tdStyle} />
-          </tr>
         </tbody>
       </table>
     </div>

@@ -500,12 +500,6 @@ const AddWeeklyPlanSection = ({ refreshKey = 0 }) => {
     totalWeeks:    new Set(plans.map((p) => `${p.year}-${p.weekNumber}`)).size,
     submitted:     plans.filter((p) => p.logStatus === 'submitted').length,
     pending:       plans.filter((p) => p.logStatus !== 'submitted').length,
-    latestProgress: (() => {
-      const withPct = plans.filter((p) => p.progressPercent > 0).sort((a, b) =>
-        a.year !== b.year ? b.year - a.year : b.weekNumber - a.weekNumber
-      );
-      return withPct.length > 0 ? withPct[0].progressPercent : 0;
-    })(),
   };
 
   const handleClear = () => {
@@ -678,7 +672,6 @@ const AddWeeklyPlanSection = ({ refreshKey = 0 }) => {
                 { label: 'Total Weeks',        value: projectStats.totalWeeks,    color: '#1d4ed8' },
                 { label: 'Submitted',          value: projectStats.submitted,     color: '#16a34a' },
                 { label: 'Pending',            value: projectStats.pending,       color: projectStats.pending > 0 ? '#d97706' : '#9ca3af' },
-                { label: '% Progress',         value: `${projectStats.latestProgress}%`, color: '#4f46e5' },
               ].map((s) => (
                 <div key={s.label} style={{ textAlign: 'center', padding: '8px 16px', background: '#fff', borderRadius: '9px', border: '1px solid #e5e7eb', minWidth: '90px' }}>
                   <div style={{ fontSize: '10px', color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{s.label}</div>
@@ -994,7 +987,7 @@ const AddWeeklyPlanSection = ({ refreshKey = 0 }) => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1020px' }}>
                   <thead>
                     <tr>
-                      {['Employee','Year','Week','Planned Hrs (H)','Actual Hrs','Leave Hrs','Training Hrs','% Progress','Total Wk Cap','Status','Action'].map((h) => (
+                      {['Employee','Year','Week','Planned Hrs (H)','Actual Hrs','Leave Hrs','Training Hrs','Total Wk Cap','Status','Action'].map((h) => (
                         <th key={h} style={thStyle}>{h}</th>
                       ))}
                     </tr>
@@ -1032,9 +1025,6 @@ const AddWeeklyPlanSection = ({ refreshKey = 0 }) => {
                             </td>
                             <td style={{ ...tdStyle, color: plan.trainingHours > 0 ? '#d97706' : '#6b7280' }}>
                               {plan.trainingHours != null ? plan.trainingHours : <span style={{ color: '#d1d5db' }}>—</span>}
-                            </td>
-                            <td style={{ ...tdStyle, fontWeight: 700, color: '#7c3aed', fontSize: '15px' }}>
-                              {plan.progressPercent != null ? `${plan.progressPercent}%` : <span style={{ color: '#d1d5db', fontWeight: 400 }}>—</span>}
                             </td>
                             <td style={{ ...tdStyle, fontWeight: 600, color: '#0369a1' }}>
                               {plan.totalWeeklyHours != null ? plan.totalWeeklyHours : <span style={{ color: '#d1d5db' }}>—</span>}
@@ -1085,24 +1075,6 @@ const AddWeeklyPlanSection = ({ refreshKey = 0 }) => {
                         const group = sortedFilteredPlans.slice(gStart, i);
                         group.forEach((plan, ri) => output.push(planRow(plan, ri % 2 === 0 ? '#fff' : '#fafafa')));
 
-                        // Sum of all reported progress values for this employee
-                        const pctRows  = group.filter((r) => r.progressPercent != null);
-                        const totalPct = pctRows.length > 0 ? pctRows.reduce((s, r) => s + r.progressPercent, 0) : null;
-
-                        output.push(
-                          <tr key={`emp-summary-${empKey}`} style={{ background: 'linear-gradient(90deg,#eff6ff,#f5f3ff)', borderTop: '2px solid #bfdbfe', borderBottom: '2px solid #ddd6fe' }}>
-                            <td colSpan={7} style={{ ...tdStyle, fontWeight: 700, color: '#4f46e5', fontSize: '12.5px' }}>
-                              {first.employee?.name}
-                              <span style={{ marginLeft: '8px', fontWeight: 400, color: '#9ca3af', fontSize: '11px' }}>Total Progress</span>
-                            </td>
-                            <td style={{ ...tdStyle, fontWeight: 800, color: '#7c3aed', fontSize: '16px' }}>
-                              {totalPct != null
-                                ? <span style={{ background: '#f5f3ff', border: '1.5px solid #ddd6fe', padding: '3px 10px', borderRadius: '12px' }}>{totalPct}%</span>
-                                : <span style={{ color: '#d1d5db', fontWeight: 400, fontSize: '13px' }}>—</span>}
-                            </td>
-                            <td colSpan={3} style={tdStyle} />
-                          </tr>
-                        );
                       }
                       return output;
                     })()}

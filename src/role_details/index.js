@@ -79,9 +79,9 @@ export const roles = {
 };
 
 export const departmentByEmployeeId = {
-  GEPL8538: "Mechanical",
+  GEPL8538: "Mechanical And System Integration",
   GEPL8355: "Lean Manufacturing & Tool Design",
-  GEPL7012: "Electrical",
+  GEPL7012: "Electrical And Automation",
 };
 
 export const roleOptions = [
@@ -91,11 +91,11 @@ export const roleOptions = [
 ];
 
 export const departmentOptions = [
-  "Mechanical",
+  "Mechanical And System Integration",
   "Virtual Engineering Manufacturing",
   "Lean Manufacturing & Tool Design",
-  "Electrical",
-  "Hydraulics",
+  "Electrical And Automation",
+  "Hydraulics System Design",
   "Digital Tech. & Program Management",
 ];
 

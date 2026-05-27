@@ -227,9 +227,6 @@ const TeamSection = ({ refreshKey = 0 }) => {
                                 ))}
                               </div>
                             )}
-                            <p style={{ margin: '12px 0 0', fontSize: '12px', color: '#9ca3af' }}>
-                              Click row again to collapse · Week {m.currentWeek}/{m.currentYear}
-                            </p>
                           </td>
                         </tr>
                       )}

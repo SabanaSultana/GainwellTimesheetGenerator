@@ -61,6 +61,10 @@ const SummaryApi = {
 
   // ── Audit Logs ────────────────────────────────────────────────────────────
   getAuditLogs: { url: `${backendDomain}/api/audit-logs`, method: 'get' },
+
+  // ── Project Progress ──────────────────────────────────────────────────────
+  getProjectProgress:    { url: `${backendDomain}/api/project-progress`, method: 'get'  }, // append /:projectId
+  upsertProjectProgress: { url: `${backendDomain}/api/project-progress`, method: 'post' },
 };
 
 export default SummaryApi;

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { BsSearch, BsClockHistory, BsPencil, BsTrash, BsBoxArrowUpRight } from 'react-icons/bs';
+import { useParams } from 'react-router-dom';
+import { BsSearch, BsClockHistory, BsPencil, BsTrash, BsBarChartLine } from 'react-icons/bs';
 import { getAuthUser } from '../utils/auth';
 import SummaryApi from '../apis/index.jsx';
 import EditProjectModal from './EditProjectModal.jsx';
 import JustificationHistoryModal from './JustificationHistoryModal.jsx';
+import ProjectProgressModal from './ProjectProgressModal.jsx';
 
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
@@ -19,7 +20,6 @@ const SORT_OPTIONS = [
 
 const ProjectsTable = ({ refreshKey = 0 }) => {
   const { employeeId } = useParams();
-  const navigate = useNavigate();
   const { user } = getAuthUser();
   const canDelete = ['Manager(COE)', 'Admin'].includes(user?.role);
 
@@ -30,6 +30,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
   const [debouncedSearch, setDebounced]   = useState('');
   const [sortKey, setSortKey]             = useState('code-asc');
   const [editTarget, setEditTarget]             = useState(null);
+  const [progressTarget, setProgressTarget]     = useState(null);
   const [justificationTarget, setJustificationTarget] = useState(null);
   const [deleteTarget, setDeleteTarget]         = useState(null);
   const [deleteJust, setDeleteJust]       = useState('');
@@ -204,10 +205,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
               {sorted.map((p, idx) => (
                 <tr
                   key={p._id}
-                  onClick={() => navigate(`/dashboard/manager/${employeeId}/project/${p._id}`)}
-                  style={{ background: idx % 2 === 0 ? '#ffffff' : '#fafafa', transition: 'background 0.12s', cursor: 'pointer' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#f0f4ff')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = idx % 2 === 0 ? '#ffffff' : '#fafafa')}
+                  style={{ background: idx % 2 === 0 ? '#ffffff' : '#fafafa', transition: 'background 0.12s' }}
                 >
                   <td style={tdStyle}>
                     <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '3px 9px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 }}>
@@ -251,11 +249,11 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
                   <td style={{ ...tdStyle, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
                       <button
-                        title="View project details"
-                        onClick={() => navigate(`/dashboard/manager/${employeeId}/project/${p._id}`)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #3b82f6 80%, #60a5fa 100%)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
+                        title="View department progress"
+                        onClick={() => setProgressTarget(p)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '6px 13px', borderRadius: '7px', border: 'none', background: 'linear-gradient(135deg, #7c3aed 80%, #a78bfa 100%)', color: '#fff', fontSize: '12px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }}
                       >
-                        <BsBoxArrowUpRight size={12} /> View
+                        <BsBarChartLine size={12} /> Progress
                       </button>
                       <button
                         title="View justification history"
@@ -291,6 +289,7 @@ const ProjectsTable = ({ refreshKey = 0 }) => {
 
       <EditProjectModal project={editTarget} onClose={() => setEditTarget(null)} onSuccess={handleEditSuccess} />
       <JustificationHistoryModal project={justificationTarget} onClose={() => setJustificationTarget(null)} />
+      {progressTarget && <ProjectProgressModal project={progressTarget} onClose={() => setProgressTarget(null)} />}
 
       {/* Delete confirmation modal */}
       {deleteTarget && (
