@@ -35,11 +35,12 @@ const ProjectProgressModal = ({ project, onClose }) => {
   const isAdmin      = user?.role === 'Admin';
   const isManagerCOE = user?.role === 'Manager(COE)';
 
-  const [data,    setData]    = useState({});
-  const [inputs,  setInputs]  = useState(() => Object.fromEntries(DEPARTMENTS.map(d => [d, ''])));
-  const [saving,  setSaving]  = useState({});
-  const [errors,  setErrors]  = useState({});
-  const [loading, setLoading] = useState(true);
+  const [data,      setData]      = useState({});
+  const [inputs,    setInputs]    = useState(() => Object.fromEntries(DEPARTMENTS.map(d => [d, ''])));
+  const [saving,    setSaving]    = useState({});
+  const [errors,    setErrors]    = useState({});
+  const [loading,   setLoading]   = useState(true);
+  const [fetchError, setFetchError] = useState('');
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -59,7 +60,9 @@ const ProjectProgressModal = ({ project, onClose }) => {
           setData(map);
           setInputs(prev => ({ ...prev, ...inputMap }));
         }
-      } catch {}
+      } catch {
+        setFetchError('Failed to load progress data. Please close and try again.');
+      }
       setLoading(false);
     };
     fetchProgress();
@@ -145,6 +148,10 @@ const ProjectProgressModal = ({ project, onClose }) => {
               <div key={i} style={{ height: '88px', borderRadius: '10px', background: 'linear-gradient(90deg,#f3f4f6 25%,#e9eaeb 50%,#f3f4f6 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.3s infinite' }} />
             ))}
             <style>{`@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+          </div>
+        ) : fetchError ? (
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', padding: '14px 16px', borderRadius: '10px', fontSize: '13px' }}>
+            {fetchError}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

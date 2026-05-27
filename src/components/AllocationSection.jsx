@@ -286,7 +286,7 @@ const AllocationSection = ({ projectId }) => {
               >
                 <option value="">Select employee…</option>
                 {deptEmployees
-                  .filter((e) => !allocations.some((a) => a.employee?._id === e._id || a.employee === e._id))
+                  .filter((e) => !allocations.some((a) => String(a.employee?._id ?? a.employee) === String(e._id)))
                   .map((e) => (
                     <option key={e._id} value={e._id}>{e.name} ({e.employeeId}) — {e.department}</option>
                   ))}
